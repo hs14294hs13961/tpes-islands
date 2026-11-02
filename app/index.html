@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#6B5B95">
+  <meta name="description" content="新竹縣關西鎮太平國小的學習成果群島：每一屆一座島，點進去看孩子們的作品。">
+  <title>太平群島</title>
+  <meta property="og:title" content="太平群島｜太平國小學習成果">
+  <meta property="og:description" content="每一屆一座島，點進去看孩子們的作品。">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="./public/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="./public/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="labels"></div>
+
+  <div id="loading" class="loading">
+    <img src="./public/logo.png" alt="" aria-hidden="true">
+    <p>太平群島正在浮出海面…</p>
+  </div>
+
+  <header class="top">
+    <div class="card brand">
+      <img class="brand-mark" src="./public/logo.png" alt="太平國小校徽">
+      <div>
+        <h1>太平群島</h1>
+        <p class="brand-sub"><span class="live-dot"></span><span id="brand-sub">讀取中</span></p>
+      </div>
+    </div>
+    <div class="card stats" id="stats" aria-label="群島統計"></div>
+    <nav class="card actions" aria-label="主要功能">
+      <button type="button" class="ghost" id="btn-home">全景</button>
+      <a class="cta" id="upload-link" href="#" target="_blank" rel="noopener">上傳成果 ↗</a>
+    </nav>
+  </header>
+
+  <aside class="card info-card" id="info-card" aria-live="polite">
+    <button type="button" class="close" id="info-close" aria-label="關閉">×</button>
+    <p class="info-island" id="info-island"></p>
+    <h2 id="info-title"></h2>
+    <p class="info-meta" id="info-meta"></p>
+    <p class="info-desc" id="info-desc"></p>
+    <p class="info-note">成果卡片與預覽會在下一階段放進這裡</p>
+  </aside>
+
+  <footer class="bottom">
+    <div class="card seg" role="group" aria-label="時段">
+      <button type="button" data-time="live" class="on"><span class="rec"></span>即時 <span class="clock"></span></button>
+      <button type="button" data-time="dawn">清晨</button>
+      <button type="button" data-time="day">白天</button>
+      <button type="button" data-time="dusk">黃昏</button>
+      <button type="button" data-time="night">夜晚</button>
+    </div>
+    <div class="card seg" role="group" aria-label="顯示">
+      <button type="button" data-toggle="names" class="on">名牌</button>
+      <button type="button" data-toggle="pause">暫停</button>
+      <button type="button" id="btn-bird">鳥瞰</button>
+    </div>
+    <div class="card butler">
+      <div class="butler-face" aria-hidden="true">Q</div>
+      <div>
+        <p class="butler-name">太平Q雞</p>
+        <p class="butler-text" id="butler-text"></p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
