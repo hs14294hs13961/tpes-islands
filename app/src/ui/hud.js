@@ -46,16 +46,30 @@ export function createHud({ school, data, residents, onTime, onToggle, onHome, o
     onBird(on);
   });
 
-  // 小管家：輪播最新上架的成果
+  // 小管家太平Q雞：輪播最新上架的成果，三天內的新成果用驚訝臉
+  const fresh = (iso) => (new Date(data.asOf) - new Date(iso)) / 864e5 <= 3;
   const lines = [
-    '歡迎來到太平群島！拖曳畫面轉一轉，點島名就能飛過去。',
-    ...data.recent.map((r) => `${r.cls}・${r.subject}：〈${r.title}〉上架了（${rocDate(r.date)}）`),
+    { face: 'wave', text: '歡迎來到太平群島！拖曳畫面轉一轉，點島名就能飛過去。' },
+    { face: 'think', text: '想看哪一班的作品？點島上的「成果館」試試看。' },
+    ...data.recent.map((r) => ({
+      face: fresh(r.date) ? 'wow' : 'happy',
+      text: `${r.cls}・${r.subject}：〈${r.title}〉上架了（${rocDate(r.date)}）`,
+    })),
   ];
+  const faceEl = $('butler-face');
+  ['wave', 'happy', 'think', 'wow'].forEach((f) => { new Image().src = `./public/qchick/${f}.png`; });
   let li = 0;
   const say = () => {
     const el = $('butler-text');
+    const line = lines[li++ % lines.length];
     el.classList.remove('show');
-    setTimeout(() => { el.textContent = lines[li++ % lines.length]; el.classList.add('show'); }, 250);
+    setTimeout(() => {
+      el.textContent = line.text;
+      faceEl.src = `./public/qchick/${line.face}.png`;
+      faceEl.classList.add('pop');
+      setTimeout(() => faceEl.classList.remove('pop'), 220);
+      el.classList.add('show');
+    }, 250);
   };
   say();
   setInterval(say, 7000);

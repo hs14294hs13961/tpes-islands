@@ -36,7 +36,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: grid; place-content: center; justify-items: center; gap: 12px;
   background: var(--paper); transition: opacity .8s ease .2s, visibility 0s 1s;
 }
-.loading img { width: 72px; animation: bob 1.6s ease-in-out infinite; }
+.loading img { width: 96px; border-radius: 50%; animation: bob 1.6s ease-in-out infinite; }
 .loading p { margin: 0; color: var(--primary); font-weight: 600; letter-spacing: .05em; }
 .loading.done { opacity: 0; visibility: hidden; }
 @keyframes bob { 50% { transform: translateY(-8px); } }
@@ -125,9 +125,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .butler { margin-left: auto; display: flex; gap: 10px; align-items: center; padding: 10px 14px 10px 10px; max-width: 380px; }
 .butler-face {
-  flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--primary); color: #fff; font-weight: 800; font-size: 18px;
+  flex: none; width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
+  background: var(--paper); box-shadow: 0 0 0 2px var(--primary); transition: transform .2s;
 }
+.butler-face.pop { transform: scale(1.12) rotate(-4deg); }
 .butler-name { margin: 0; font-size: 11px; color: var(--primary); font-weight: 700; }
 .butler-text { margin: 2px 0 0; font-size: 13px; line-height: 1.45; opacity: 0; transition: opacity .25s; }
 .butler-text.show { opacity: 1; }
