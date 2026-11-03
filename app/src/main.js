@@ -6,6 +6,7 @@ import { SCHOOL, buildIslandList } from './data/islands.js';
 import { buildWorld } from './scene/world.js';
 import { createEnv } from './scene/env.js';
 import { createPeople } from './scene/people.js';
+import { loadCharacters } from './scene/characters.js';
 import { createLabels } from './ui/labels.js';
 import { createHud } from './ui/hud.js';
 import { GLOW } from './scene/kit.js';
@@ -45,7 +46,7 @@ const data = await loadData();
 const islands = buildIslandList(data.currentYear, data);
 const world = buildWorld(scene, islands);
 const env = createEnv(scene, { lamps: world.lamps, haloMat: world.haloMat, mobile });
-const people = createPeople(scene, world.clusters);
+const people = createPeople(scene, world.clusters, await loadCharacters());
 
 // ── 鏡頭 ─────────────────────────────────────────────
 

@@ -1,14 +1,25 @@
 // 島民：學生穿太平T、老師與行政穿太平 POLO、叔公穿工作背心。
-// 這是暫代造型（PRD 決策 E），之後換成 Higgsfield 的 3D 角色，走路邏輯不變。
+// 有 Higgsfield 3D 模型的島民用模型（目前學生先共用男 1），其餘仍是暫代造型（PRD 決策 E），走路邏輯相同。
 // 散步路線：每格外圈半徑 3.6 公尺的環形路，走到格子邊再穿到隔壁格。
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 import { box, ball, cyl, TOP, HEX, seeded } from './kit.js';
+import { spawnCharacter } from './characters.js';
 
 const TEE = 0xb8e0d3;        // 太平T 海藍色
 const SKIN = 0xf2c9a0;
 const HAIR = 0x2b2118;
 const RING_R = HEX * 0.72;
+const MODEL_H = 1.2;         // 3D 模型原始身高（公尺）
+
+// 用 3D 模型做一位島民；身高比照暫代造型
+function makeModelPerson(model, rnd) {
+  const { root, mixer, walk } = spawnCharacter(model);
+  const scale = 1.1 + rnd() * 0.12;
+  root.scale.setScalar(scale);
+  walk.time = rnd() * model.walk.duration; // 錯開步伐，不要大家同手同腳
+  return { root, mixer, walk, weight: 0, height: MODEL_H * scale };
+}
 
 function limb(parent, w, h, d, color, x, y) {
   const pivot = new THREE.Group();
@@ -50,7 +61,7 @@ function makePerson(p, rnd) {
   return { root, body, legL, legR, armL, armR, height: 1.45 * scale };
 }
 
-export function createPeople(scene, clusters) {
+export function createPeople(scene, clusters, models = {}) {
   const people = [];
   const tags = [];
   const rnd = seeded(2026);
@@ -58,7 +69,8 @@ export function createPeople(scene, clusters) {
   for (const c of clusters) {
     for (const p of c.people || []) {
       const tile = c.tiles[p.tile % c.tiles.length];
-      const m = makePerson(p, rnd);
+      const model = p.student && models['student-m1'];
+      const m = model ? makeModelPerson(model, rnd) : makePerson(p, rnd);
       scene.add(m.root);
       const person = {
         ...m, tile, cluster: c,
@@ -140,7 +152,14 @@ export function createPeople(scene, clusters) {
         if (p.t >= 1) nextMove(p);
         moving = true;
       }
-      // 走路擺手擺腳、身體微微彈跳
+      if (p.mixer) { // 3D 模型：走路動作淡入淡出，停下時回到站姿
+        p.weight += ((moving ? 1 : 0) - p.weight) * Math.min(1, dt * 6);
+        p.walk.setEffectiveWeight(p.weight);
+        p.walk.timeScale = p.speed * 0.85;
+        p.mixer.update(dt);
+        continue;
+      }
+      // 暫代造型：走路擺手擺腳、身體微微彈跳
       const s = moving ? Math.sin((time + p.phase) * 9) * 0.6 : 0;
       p.legL.rotation.x = s;
       p.legR.rotation.x = -s;

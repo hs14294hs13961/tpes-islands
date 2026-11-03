@@ -24,18 +24,18 @@ const GRADE_NAME = ['', '一', '二', '三', '四', '五', '六'];
 // 班級島的位置：依「目前年級」排，一年級在西邊，順時針繞到六年級
 const CLASS_SLOTS = { 1: [-5, 1], 2: [-3, -3], 3: [1, -5], 4: [5, -5], 5: [6, -1], 6: [4, 3] };
 
-// 屆別島：以入學學年度為身分（PRD 決策 A2），學生人數跟著這一屆走
+// 屆別島：以入學學年度為身分（PRD 決策 A2），男女人數跟著這一屆走（115 學年實際人數）
 export const COHORTS = [
-  { entry: 115, students: 9 },
-  { entry: 114, students: 6 },
-  { entry: 113, students: 5 },
-  { entry: 112, students: 5 },
-  { entry: 111, students: 5 },
-  { entry: 110, students: 4 },
+  { entry: 115, boys: 5, girls: 4 },
+  { entry: 114, boys: 2, girls: 4 },
+  { entry: 113, boys: 3, girls: 2 },
+  { entry: 112, boys: 2, girls: 3 },
+  { entry: 111, boys: 3, girls: 2 },
+  { entry: 110, boys: 2, girls: 2 },
 ];
 
 // 導師依「目前年級」配（每年 8 月改這裡）；來源：教師名冊.xlsx
-export const HOMEROOM = { 1: '李曉櫻', 2: '羅梅華', 3: '簡翠華', 4: '邱惠雯', 5: '黃薇', 6: '盧志玲' };
+export const HOMEROOM = { 1: '李曉櫻', 2: '羅梅華', 3: '潘宛宜', 4: '邱惠雯', 5: '黃薇', 6: '盧志玲' };
 
 // 科目 → 地標類型
 export const SUBJECT_TYPE = {
@@ -62,11 +62,12 @@ const FIXED = [
       { name: '智造太平工坊', type: 'maker', ground: 'stone', subject: '智造太平' },
     ],
     people: [
-      { role: '校長', gender: 'f', tile: 1, prop: 'brooch' },
+      { role: '校長', name: '黃春嫺', gender: 'f', tile: 1, prop: 'brooch' },
       { role: '教導主任', name: '陳美華', gender: 'f', tile: 4, prop: 'clipboard' },
       { role: '總務主任', name: '莊紹群', gender: 'm', tile: 4, prop: 'clipboard' },
+      { role: '幹事', name: '李易霖', gender: 'm', tile: 4 },
       { role: '教學組長', name: '楊瑞華', gender: 'f', tile: 0 },
-      { role: '訓育組長', name: '潘宛宜', gender: 'f', tile: 0 },
+      { role: '學務組長', name: '簡翠華', gender: 'f', tile: 0 },
       { role: '英文老師', name: '鄧芸妃', gender: 'f', tile: 2, prop: 'book' },
     ],
   },
@@ -83,9 +84,9 @@ const FIXED = [
       { name: '水稻田', type: 'paddy', ground: 'farm' },
     ],
     people: [
-      { role: '叔公', gender: 'm', tile: 0, worker: true },
-      { role: '叔公', gender: 'm', tile: 2, worker: true },
-      { role: '叔公', gender: 'm', tile: 4, worker: true },
+      { role: '叔公', gender: 'm', tile: 0, worker: true, age: 'mid' },
+      { role: '叔公', gender: 'm', tile: 2, worker: true, age: 'old' },
+      { role: '叔公', gender: 'm', tile: 4, worker: true, age: 'old' },
     ],
   },
   {
@@ -110,11 +111,12 @@ export function buildIslandList(currentYear, data) {
       { name: '成果館', type: 'gallery', ground: 'stone', count: stats.total },
       ...subjects.map(([s, n]) => ({ name: s, type: SUBJECT_TYPE[s] || 'meadow', ground: 'lawn', count: n, subject: s })),
     ];
-    const students = Array.from({ length: c.students }, (_, i) => ({ student: true, gender: i % 2 ? 'f' : 'm', tile: i % tiles.length }));
+    const count = c.boys + c.girls;
+    const students = Array.from({ length: count }, (_, i) => ({ student: true, gender: i < c.boys ? 'm' : 'f', tile: i % tiles.length }));
     return {
       id: `c${c.entry}`, kind: 'class', grade,
       name: `${GRADE_NAME[grade]}年甲班`, en: `GRADE ${grade} ISLAND`,
-      sub: `${c.entry} 學年入學・${c.students} 位同學`,
+      sub: `${c.entry} 學年入學・${count} 位同學`,
       tagline: `${c.entry} 學年入學的這一屆，一起長大的島`,
       center: CLASS_SLOTS[grade], total: stats.total, tiles,
       people: [{ role: `${GRADE_NAME[grade]}年級導師`, name: HOMEROOM[grade], gender: 'f', tile: 0 }, ...students],
