@@ -8,6 +8,8 @@ export const SCHOOL = {
   school: '新竹縣關西鎮太平國民小學',
   // 老師上傳成果仍在電子書櫃
   uploadUrl: 'https://script.google.com/a/macros/tpes.hcc.edu.tw/s/AKfycbyzgcnqi0FfQzPmVZv7503wCspJNTwYMViYlbnIdPQ2ZdDHCZK90GeBCkwLJp4wmNCO/exec',
+  // 電子書櫃的唯讀資料介面（只回傳上架成果的公開欄位）
+  apiUrl: 'https://script.google.com/macros/s/AKfycbyzgcnqi0FfQzPmVZv7503wCspJNTwYMViYlbnIdPQ2ZdDHCZK90GeBCkwLJp4wmNCO/exec?api=islands',
 };
 
 // 品牌色（PRD 第 7 節：仙草花紫＋小雞橘）
@@ -76,14 +78,14 @@ const FIXED = [
     tagline: '真實校園的縮小版；之後可以從這裡走進 3D 校園地圖',
     // 依真實校園配置：校門在最南端，進門是水池，正中央是球場，後方是教學大樓與司令台
     tiles: [
-      { name: '球場', type: 'court', ground: 'lawn', bare: true },
-      { name: '樹屋', type: 'treehouse', ground: 'lawn', bare: true },
-      { name: '水池', type: 'pond', ground: 'lawn', bare: true },
-      { name: '水稻田', type: 'paddy', ground: 'lawn', bare: true },
-      { name: '夢想雞舍', type: 'coop', ground: 'lawn', bare: true },
-      { name: '教學大樓', type: 'campus', ground: 'stone', bare: true, noWalk: true },
-      { name: '司令台', type: 'campusStage', ground: 'stone', bare: true, noWalk: true },
-      { name: '校門', type: 'gate', ground: 'street', bare: true, at: [-1, 2] },
+      { name: '球場', type: 'court', ground: 'lawn', bare: true, desc: '校園正中央，紅色跑道圍著綠色球場，下課時最熱鬧的地方。' },
+      { name: '樹屋', type: 'treehouse', ground: 'lawn', bare: true, desc: '太平樹屋：兩根彩色水泥管撐起木平台，旁邊就是老樹和稻田。' },
+      { name: '水池', type: 'pond', ground: 'lawn', bare: true, desc: '一進校門就看得到的水池，有睡蓮、白鷺和停在枝頭的八哥。' },
+      { name: '水稻田', type: 'paddy', ground: 'lawn', bare: true, desc: '學校自己的小稻田，旁邊還種著太平Q雞最愛的仙草。' },
+      { name: '夢想雞舍', type: 'coop', ground: 'lawn', bare: true, desc: '太平國小 27 屆夢想雞舍，由孩子們一起照顧。' },
+      { name: '教學大樓', type: 'campus', ground: 'stone', bare: true, noWalk: true, desc: 'U 形的兩層樓校舍，屋頂鋪著太陽能板，把司令台抱在中間。' },
+      { name: '司令台', type: 'campusStage', ground: 'stone', bare: true, noWalk: true, desc: '波浪頂棚下的舞台，背牆與底座的彩繪都是校園裡真實的壁畫。' },
+      { name: '校門', type: 'gate', ground: 'street', bare: true, at: [-1, 2], desc: '新竹縣關西鎮太平國民小學，歡迎光臨。' },
     ],
     people: [
       { role: '叔公', gender: 'm', tile: 0, worker: true, age: 'mid' },
@@ -92,7 +94,7 @@ const FIXED = [
     ],
   },
   {
-    id: 'grad-109', name: '114 學年畢業生', en: 'CLASS OF 114', center: [-8, -2], small: true,
+    id: 'grad-109', name: '114 學年畢業生', en: 'CLASS OF 114', center: [-8, -2], small: true, entry: 109,
     tagline: '畢業後整座島會漂到外圈，成果一直留著',
     tiles: [{ name: '畢業紀念亭', type: 'pavilion', ground: 'lawn' }],
     people: [],
@@ -111,7 +113,7 @@ export function buildIslandList(currentYear, data) {
     const tiles = [
       // 五甲教室有閱讀角，照真實教室做成剖面
       grade === 5
-        ? { name: '五甲教室・閱讀角', type: 'readingCorner', ground: 'lawn' }
+        ? { name: '五甲教室・閱讀角', type: 'readingCorner', ground: 'lawn', desc: '五甲教室裡的閱讀角：巧拼地墊、一櫃子的書，還有大貓熊和大象陪著看書。' }
         : { name: `${GRADE_NAME[grade]}甲教室`, type: 'classroom', ground: 'lawn' },
       { name: '成果館', type: 'gallery', ground: 'stone', count: stats.total },
       ...subjects.map(([s, n]) => ({ name: s, type: SUBJECT_TYPE[s] || 'meadow', ground: 'lawn', count: n, subject: s })),
@@ -119,7 +121,7 @@ export function buildIslandList(currentYear, data) {
     const count = c.boys + c.girls;
     const students = Array.from({ length: count }, (_, i) => ({ student: true, gender: i < c.boys ? 'm' : 'f', tile: i % tiles.length }));
     return {
-      id: `c${c.entry}`, kind: 'class', grade,
+      id: `c${c.entry}`, kind: 'class', grade, entry: c.entry,
       name: `${GRADE_NAME[grade]}年甲班`, en: `GRADE ${grade} ISLAND`,
       sub: `${c.entry} 學年入學・${count} 位同學`,
       tagline: `${c.entry} 學年入學的這一屆，一起長大的島`,

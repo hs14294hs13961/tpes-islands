@@ -51,12 +51,28 @@
     <h2 id="info-title"></h2>
     <p class="info-meta" id="info-meta"></p>
     <p class="info-desc" id="info-desc"></p>
-    <p class="info-note">成果卡片與預覽會在下一階段放進這裡</p>
+    <div class="rec-list" id="info-records"></div>
+    <a class="rec-more" id="info-more" target="_blank" rel="noopener">到電子書櫃看全部 ↗</a>
   </aside>
+
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-title" hidden>
+    <div class="card viewer-box">
+      <header class="viewer-head">
+        <div>
+          <p class="viewer-meta" id="viewer-meta"></p>
+          <h3 id="viewer-title"></h3>
+        </div>
+        <a class="viewer-open" id="viewer-open" target="_blank" rel="noopener">另開 ↗</a>
+        <button type="button" class="close" id="viewer-close" aria-label="關閉預覽">×</button>
+      </header>
+      <p class="viewer-desc" id="viewer-desc"></p>
+      <div class="viewer-body" id="viewer-body"></div>
+    </div>
+  </div>
 
   <footer class="bottom">
     <div class="card seg" role="group" aria-label="時段">
-      <button type="button" data-time="live" class="on"><span class="rec"></span>即時 <span class="clock"></span></button>
+      <button type="button" data-time="live" class="on"><span class="live-rec"></span>即時 <span class="clock"></span></button>
       <button type="button" data-time="dawn">清晨</button>
       <button type="button" data-time="day">白天</button>
       <button type="button" data-time="dusk">黃昏</button>

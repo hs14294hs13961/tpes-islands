@@ -1,5 +1,6 @@
 // 畫面上的介面：品牌卡、統計數字、時段、工具列、小管家、格子資訊卡。
 import { taipeiClock } from '../scene/env.js';
+import { recordsFor, countView } from '../data/records.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -10,7 +11,7 @@ function rocDate(iso) {
 
 export function createHud({ school, data, residents, onTime, onToggle, onHome, onBird }) {
   $('brand-sub').textContent = data.source === 'demo'
-    ? `示範資料・成果截至 ${rocDate(data.asOf)}`
+    ? `備份資料・成果截至 ${rocDate(data.asOf)}`
     : `即時・${rocDate(data.asOf)} 更新`;
   $('upload-link').href = school.uploadUrl;
 
@@ -74,18 +75,96 @@ export function createHud({ school, data, residents, onTime, onToggle, onHome, o
   say();
   setInterval(say, 7000);
 
-  // 格子資訊卡（P2 會擴充成完整側欄：成果卡片＋預覽）
+  // 成果預覽：PDF、影片用 Drive／YouTube 內嵌，圖片直接顯示，外部連結另開分頁
+  const TYPE_LABEL = { pdf: 'PDF', 圖片: '圖片', 影片: '影片', 音檔: '音檔', YouTube: '影片', 連結: '連結' };
+  const canEmbed = (url) => /^https:\/\/(drive\.google\.com|www\.youtube\.com)\//.test(url || '');
+  const isHttps = (url) => /^https:\/\//.test(url || '');
+  const viewer = $('viewer');
+  const metaOf = (r) => `${rocDate(r.date)}・${r.className}・${r.subject}`;
+
+  function closeViewer() {
+    viewer.hidden = true;
+    $('viewer-body').replaceChildren(); // 移除內嵌框，影片才會停
+  }
+  function openRecord(r) {
+    countView(r.id);
+    if (!canEmbed(r.embedUrl)) { // 外部連結：多半不允許內嵌
+      if (isHttps(r.url)) window.open(r.url, '_blank', 'noopener');
+      return;
+    }
+    $('viewer-meta').textContent = metaOf(r);
+    $('viewer-title').textContent = r.title;
+    $('viewer-desc').textContent = r.desc || '';
+    $('viewer-desc').hidden = !r.desc;
+    $('viewer-open').href = `${school.uploadUrl}?id=${encodeURIComponent(r.id)}`;
+    let el;
+    if (r.type === '圖片') {
+      el = document.createElement('img');
+      el.src = r.embedUrl;
+      el.alt = r.title;
+      el.referrerPolicy = 'no-referrer';
+    } else {
+      el = document.createElement('iframe');
+      el.src = r.embedUrl;
+      el.title = r.title;
+      el.allow = 'autoplay; fullscreen';
+      el.referrerPolicy = 'no-referrer';
+    }
+    $('viewer-body').replaceChildren(el);
+    viewer.hidden = false;
+  }
+  $('viewer-close').addEventListener('click', closeViewer);
+  viewer.addEventListener('click', (e) => { if (e.target === viewer) closeViewer(); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !viewer.hidden) closeViewer(); });
+
+  function recordCard(r) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rec';
+    const thumb = document.createElement('span');
+    thumb.className = 'rec-thumb';
+    thumb.textContent = TYPE_LABEL[r.type] || '成果';
+    if (isHttps(r.thumb)) {
+      const img = document.createElement('img');
+      img.src = r.thumb;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => img.remove()); // 縮圖拿不到就留類型文字
+      thumb.append(img);
+    }
+    const body = document.createElement('span');
+    body.className = 'rec-body';
+    const title = document.createElement('span');
+    title.className = 'rec-title';
+    title.textContent = r.title;
+    const meta = document.createElement('span');
+    meta.className = 'rec-meta';
+    meta.textContent = `${rocDate(r.date)}・${r.subject}・${TYPE_LABEL[r.type] || r.type}`;
+    body.append(title, meta);
+    b.append(thumb, body);
+    b.addEventListener('click', () => openRecord(r));
+    return b;
+  }
+
+  // 格子資訊卡：說明＋這一格的成果卡片
   const card = $('info-card');
   $('info-close').addEventListener('click', () => card.classList.remove('open'));
+  $('info-more').href = school.uploadUrl;
   function showInfo({ cluster, tile }) {
     $('info-island').textContent = cluster.en ? `${cluster.name}・${cluster.en}` : cluster.name;
     $('info-title').textContent = tile ? tile.name : cluster.name;
     const bits = [];
-    if (tile?.count !== undefined) bits.push(`${tile.count} 件成果`);
-    if (!tile && cluster.total !== undefined) bits.push(`共 ${cluster.total} 件成果`);
+    const list = recordsFor(data, { cluster, tile });
+    if (list.length) bits.push(`${list.length} 件成果`);
     if (cluster.sub) bits.push(cluster.sub);
     $('info-meta').textContent = bits.join('・');
-    $('info-desc').textContent = cluster.tagline || '';
+    $('info-desc').textContent = tile?.desc || cluster.tagline || '';
+    const box = $('info-records');
+    box.replaceChildren(...list.map(recordCard));
+    box.scrollTop = 0;
+    box.hidden = !list.length;
+    $('info-more').hidden = !list.length;
     card.classList.add('open');
   }
 

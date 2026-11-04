@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/CSS2DRenderer.js';
 import { SCHOOL, buildIslandList } from './data/islands.js';
+import { loadData } from './data/records.js';
 import { buildWorld } from './scene/world.js';
 import { createEnv } from './scene/env.js';
 import { createPeople } from './scene/people.js';
@@ -35,12 +36,6 @@ controls.minDistance = 22;
 controls.maxDistance = 380;
 controls.maxPolarAngle = 1.25;
 controls.screenSpacePanning = false;
-
-async function loadData() {
-  // P1 會先試電子書櫃的唯讀介面，失敗才退回示範資料
-  const res = await fetch('./src/data/demo.json');
-  return res.json();
-}
 
 const data = await loadData();
 const islands = buildIslandList(data.currentYear, data);
@@ -146,8 +141,11 @@ const clock = new THREE.Clock();
 let simTime = 0;
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
+const viewerEl = document.getElementById('viewer');
+
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
+  if (!viewerEl.hidden) return; // 看成果時 3D 先停，手機才不會同時撐兩邊
   if (!paused) simTime += dt;
 
   if (fly) {
