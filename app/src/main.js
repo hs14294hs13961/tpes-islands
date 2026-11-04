@@ -46,7 +46,8 @@ const data = await loadData();
 const islands = buildIslandList(data.currentYear, data);
 const world = buildWorld(scene, islands);
 const env = createEnv(scene, { lamps: world.lamps, haloMat: world.haloMat, mobile });
-const people = createPeople(scene, world.clusters, await loadCharacters());
+const people = createPeople(scene, world.clusters);
+loadCharacters(people.upgrade); // 不等模型，先讓島浮出來，下載好的島民再換裝
 
 // ── 鏡頭 ─────────────────────────────────────────────
 

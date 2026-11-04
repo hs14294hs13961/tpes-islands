@@ -1,5 +1,5 @@
 // 島民：學生穿太平T、老師與行政穿太平 POLO、叔公穿工作背心。
-// 有 Higgsfield 3D 模型的島民用模型（目前學生先共用男 1），其餘仍是暫代造型（PRD 決策 E），走路邏輯相同。
+// 一開始都是暫代造型（PRD 決策 E），Higgsfield 3D 模型下載好就換上，走路邏輯相同。
 // 散步路線：每格外圈半徑 3.6 公尺的環形路，走到格子邊再穿到隔壁格。
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
@@ -11,14 +11,16 @@ const SKIN = 0xf2c9a0;
 const HAIR = 0x2b2118;
 const RING_R = HEX * 0.72;
 const MODEL_H = 1.2;         // 3D 模型原始身高（公尺）
+// 3D 島民腳下的軟影：全島 50 位都算真影子太重（全身頂點要多畫一次），所有人共用一片圓
+const FOOT_SHADOW_GEO = new THREE.CircleGeometry(0.2, 16).rotateX(-Math.PI / 2);
+const FOOT_SHADOW_MAT = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18, depthWrite: false });
+const NAMED = { 黃春嫺: 'principal', 莊紹群: 'director-zhuang', 黃薇: 'teacher-huang', 李易霖: 'clerk' };
 
-// 用 3D 模型做一位島民；身高比照暫代造型
-function makeModelPerson(model, rnd) {
-  const { root, mixer, walk } = spawnCharacter(model);
-  const scale = 1.1 + rnd() * 0.12;
-  root.scale.setScalar(scale);
-  walk.time = rnd() * model.walk.duration; // 錯開步伐，不要大家同手同腳
-  return { root, mixer, walk, weight: 0, height: MODEL_H * scale };
+// 誰穿哪一款：學生男女各兩款輪流，指定人物用自己的，其他女老師兩款輪流
+function modelKeyFor(p, turn) {
+  if (p.student) return p.gender === 'f' ? (turn.f++ % 2 ? 'student-f2' : 'student-f1') : (turn.m++ % 2 ? 'student-m3' : 'student-m1');
+  if (p.worker) return 'uncle';
+  return NAMED[p.name] || (turn.t++ % 2 ? 'teacher-c' : 'teacher-b');
 }
 
 function limb(parent, w, h, d, color, x, y) {
@@ -43,7 +45,6 @@ function makePerson(p, rnd) {
   box(body, 0.4, 0.46, 0.24, TEE, 0, 0.55, 0);
   if (adult) box(body, 0.22, 0.06, 0.03, 0xffffff, 0, 0.98, 0.12); // POLO 領子
   if (p.worker) box(body, 0.43, 0.38, 0.27, 0xef8a3c, 0, 0.6, 0);  // 工作背心
-  if (p.prop === 'brooch') ball(body, 0.06, 0xf28fad, 0.1, 0.86, 0.13);
   if (p.prop === 'clipboard') box(body, 0.2, 0.26, 0.03, 0xd8c8a8, 0.24, 0.55, 0.14);
   if (p.prop === 'book') box(body, 0.22, 0.28, 0.06, 0x5b8ac9, -0.25, 0.55, 0.12);
   const armL = limb(body, 0.1, 0.42, 0.12, TEE, -0.26, 0.98);
@@ -61,19 +62,20 @@ function makePerson(p, rnd) {
   return { root, body, legL, legR, armL, armR, height: 1.45 * scale };
 }
 
-export function createPeople(scene, clusters, models = {}) {
+export function createPeople(scene, clusters) {
   const people = [];
   const tags = [];
   const rnd = seeded(2026);
+  const turn = { m: 0, f: 0, t: 0 };
 
   for (const c of clusters) {
     for (const p of c.people || []) {
       const tile = c.tiles[p.tile % c.tiles.length];
-      const model = p.student && models['student-m1'];
-      const m = model ? makeModelPerson(model, rnd) : makePerson(p, rnd);
+      const m = makePerson(p, rnd);
       scene.add(m.root);
       const person = {
-        ...m, tile, cluster: c,
+        ...m, tile, cluster: c, student: !!p.student,
+        modelKey: modelKeyFor(p, turn), tag: null,
         angle: rnd() * Math.PI * 2,
         speed: p.student ? 1.0 + rnd() * 0.4 : 0.7 + rnd() * 0.2,
         state: 'idle', wait: rnd() * 3, phase: rnd() * 10,
@@ -88,6 +90,7 @@ export function createPeople(scene, clusters, models = {}) {
         tag.position.set(0, m.height / m.root.scale.x + 0.35, 0);
         m.root.add(tag);
         tags.push(tag);
+        person.tag = tag;
       }
       people.push(person);
     }
@@ -120,7 +123,9 @@ export function createPeople(scene, clusters, models = {}) {
     }
   }
 
+  let frame = 0;
   function update(dt, time) {
+    frame++;
     for (const p of people) {
       let moving = false;
       if (p.state === 'idle') {
@@ -156,7 +161,12 @@ export function createPeople(scene, clusters, models = {}) {
         p.weight += ((moving ? 1 : 0) - p.weight) * Math.min(1, dt * 6);
         p.walk.setEffectiveWeight(p.weight);
         p.walk.timeScale = p.speed * 0.85;
-        p.mixer.update(dt);
+        // 骨架動作輪流隔一格畫面更新，省一半計算，走路看起來一樣
+        p.lag += dt;
+        if ((frame + p.phase) % 2 < 1) {
+          p.mixer.update(p.lag);
+          p.lag = 0;
+        }
         continue;
       }
       // 暫代造型：走路擺手擺腳、身體微微彈跳
@@ -174,5 +184,28 @@ export function createPeople(scene, clusters, models = {}) {
     if (d.lengthSq() > 1e-6) p.root.rotation.y = Math.atan2(d.x, d.z);
   }
 
-  return { update, tags, count: people.length };
+  // 某一款模型下載好了：穿這款的島民原地換上，位置、方向、名牌都接著用
+  function upgrade(key, model) {
+    for (const p of people) {
+      if (p.modelKey !== key) continue;
+      const { root, mixer, walk } = spawnCharacter(model);
+      const scale = p.student ? 1.1 + rnd() * 0.12 : 1.42 + rnd() * 0.08;
+      root.scale.setScalar(scale);
+      root.position.copy(p.root.position);
+      root.rotation.copy(p.root.rotation);
+      const shadow = new THREE.Mesh(FOOT_SHADOW_GEO, FOOT_SHADOW_MAT);
+      shadow.position.y = 0.012;
+      root.add(shadow);
+      walk.time = rnd() * model.walk.duration; // 錯開步伐，不要大家同手同腳
+      if (p.tag) {
+        p.tag.position.set(0, MODEL_H + 0.28, 0);
+        root.add(p.tag);
+      }
+      scene.remove(p.root);
+      scene.add(root);
+      Object.assign(p, { root, mixer, walk, weight: 0, lag: 0, height: MODEL_H * scale });
+    }
+  }
+
+  return { update, upgrade, tags, count: people.length };
 }

@@ -62,7 +62,7 @@ const FIXED = [
       { name: '智造太平工坊', type: 'maker', ground: 'stone', subject: '智造太平' },
     ],
     people: [
-      { role: '校長', name: '黃春嫺', gender: 'f', tile: 1, prop: 'brooch' },
+      { role: '校長', name: '黃春嫺', gender: 'f', tile: 1 },
       { role: '教導主任', name: '陳美華', gender: 'f', tile: 4, prop: 'clipboard' },
       { role: '總務主任', name: '莊紹群', gender: 'm', tile: 4, prop: 'clipboard' },
       { role: '幹事', name: '李易霖', gender: 'm', tile: 4 },
