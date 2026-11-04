@@ -4,17 +4,37 @@
 import * as THREE from 'three';
 import { box, cyl, cone, ball, torus, roof, windows, tree, plumTree, xiancao, lamp, bench, flag, GLOW } from './kit.js';
 
-const WALL = 0xf3ead8;
-const WALL_WHITE = 0xf7f3ea;
-const BRICK = 0xb5523b;
-const ROOF = 0xc8664a;
-const PURPLE = 0x6b5b95;
-const ORANGE = 0xef8a3c;
-const LEAF = 0x7fa66a;
-const WOOD = 0x9c6b43;
+const WALL = 0xf8e8cf;
+const WALL_WHITE = 0xfbf3e4;
+const BRICK = 0xc7694c;
+const ROOF = 0xb4483a;
+const PURPLE = 0xa883d8;
+const ORANGE = 0xf2913d;
+const LEAF = 0x86c25c;
+const WOOD = 0xc9834f;
 const DARK = 0x3a3440;
+const PAGES = 0xfff8ea;
 
-const glass = new THREE.MeshLambertMaterial({ color: 0xcfe8ef, transparent: true, opacity: 0.45 });
+const glass = new THREE.MeshPhongMaterial({ color: 0xcfe8ef, transparent: true, opacity: 0.45, shininess: 90 });
+
+/** 一本書：上下封面夾著書頁，書背在左。 */
+function book(g, w, h, d, color, y, z, rot = 0, x = 0) {
+  const b = new THREE.Group();
+  b.position.set(x, y, z);
+  b.rotation.y = rot;
+  const t = h * 0.2;
+  box(b, w, t, d, color, 0, 0, 0);
+  box(b, w - 0.16, h - t * 2, d - 0.14, PAGES, 0.04, t, 0);
+  box(b, w, t, d, color, 0, h - t, 0);
+  box(b, t * 1.2, h, d, color, -w / 2 + t * 0.6, 0, 0);
+  g.add(b);
+}
+
+/** 攤開的書：兩片微微翹起的書頁。 */
+function openBook(g, w, d, color, y, z) {
+  box(g, w + 0.12, 0.08, d + 0.12, color, 0, y, z);
+  for (const s of [-1, 1]) box(g, w / 2, 0.1, d, PAGES, (s * w) / 4, y + 0.1, z).rotation.z = s * 0.1;
+}
 
 /** 一棟一般建物：牆、屋頂、正面窗與門。回傳屋頂底部高度。 */
 function building(g, w, d, h, { wall = WALL, roofColor = ROOF, z = -0.6, x = 0, flat = false, rows = 1 } = {}) {
@@ -23,7 +43,7 @@ function building(g, w, d, h, { wall = WALL, roofColor = ROOF, z = -0.6, x = 0, 
   for (let r = 0; r < rows; r++) windows(g, Math.max(2, Math.round(w / 1.1)), 0.55, 0.6, w - 0.6, 0.7 + r * (h / rows), front, x);
   box(g, 0.6, 1.0, 0.06, 0x6b4a33, x, 0, front);
   if (flat) {
-    box(g, w + 0.2, 0.2, d + 0.2, 0xcfc8bb, x, h, z);
+    box(g, w + 0.2, 0.2, d + 0.2, 0xe9d9bf, x, h, z);
   } else {
     roof(g, d + 0.4, 1.0, w + 0.4, roofColor, x, h, z);
   }
@@ -49,7 +69,7 @@ export const LANDMARKS = {
   },
 
   plaza(g) {
-    cyl(g, 1.7, 1.8, 0.35, 12, 0xd8cfc0, 0, 0, -0.4);
+    cyl(g, 1.7, 1.8, 0.35, 12, 0xf0dfc4, 0, 0, -0.4);
     for (const [x, z] of [[-1.2, -1.6], [1.2, -1.6], [-1.2, 0.8], [1.2, 0.8]]) cyl(g, 0.08, 0.08, 2.2, 5, 0xf0ece4, x, 0.35, z);
     cone(g, 2.0, 1.0, 4, PURPLE, 0, 2.55, -0.4).rotation.y = Math.PI / 4;
     flag(g, -2.6, -1.4, ORANGE);
@@ -58,13 +78,13 @@ export const LANDMARKS = {
   },
 
   principal(g) {
-    building(g, 2.8, 2.2, 1.9, { roofColor: 0x5b4a6b, z: -0.9, x: 0.4 });
+    building(g, 2.8, 2.2, 1.9, { roofColor: 0x8f6bb8, z: -0.9, x: 0.4 });
     plumTree(g, -2.0, 0.6, 1.1);
     box(g, 0.9, 0.5, 0.08, PURPLE, 0.4, 1.95 + 0.01, 0.22);
   },
 
   office(g) {
-    building(g, 4.2, 2.4, 3.4, { flat: true, rows: 2, z: -0.8, wall: 0xe9e4da });
+    building(g, 4.2, 2.4, 3.4, { flat: true, rows: 2, z: -0.8, wall: 0xf6ead6 });
     for (let i = 0; i < 3; i++) { // 屋頂太陽能板
       const p = box(g, 1.1, 0.08, 1.6, 0x2c3e66, -1.3 + i * 1.3, 3.8, -0.8);
       p.rotation.x = -0.25;
@@ -75,7 +95,7 @@ export const LANDMARKS = {
   library(g) {
     building(g, 3.8, 2.4, 2.0, { flat: true, z: -0.8, wall: WALL });
     const books = [[0xd9483b, 0], [0x5b8ac9, 0.15], [LEAF, -0.1], [ORANGE, 0.2]];
-    books.forEach(([c, rot], i) => { box(g, 2.4 - i * 0.3, 0.32, 1.5, c, 0, 2.2 + i * 0.32, -0.8).rotation.y = rot; });
+    books.forEach(([c, rot], i) => book(g, 2.4 - i * 0.3, 0.34, 1.5, c, 2.2 + i * 0.34, -0.8, rot));
     box(g, 2.4, 0.06, 1.0, 0xfaf6ee, -0.2, 0.01, 1.3); // 門前地墊
   },
 
@@ -90,25 +110,27 @@ export const LANDMARKS = {
   },
 
   maker(g) {
-    box(g, 4.0, 2.0, 2.4, 0xdcd6cc, 0, 0, -0.8);
-    roof(g, 1.2, 0.9, 2.6, 0x8a8f98, -1.0, 2.0, -0.8, false);
-    roof(g, 1.2, 0.9, 2.6, 0x8a8f98, 0.2, 2.0, -0.8, false);
-    roof(g, 1.2, 0.9, 2.6, 0x8a8f98, 1.4, 2.0, -0.8, false);
+    box(g, 4.0, 2.0, 2.4, 0xf3e6d2, 0, 0, -0.8);
+    roof(g, 1.2, 0.9, 2.6, 0xa9b4c2, -1.0, 2.0, -0.8, false);
+    roof(g, 1.2, 0.9, 2.6, 0xa9b4c2, 0.2, 2.0, -0.8, false);
+    roof(g, 1.2, 0.9, 2.6, 0xa9b4c2, 1.4, 2.0, -0.8, false);
     windows(g, 3, 0.7, 0.6, 3.2, 0.8, 0.41);
     torus(g, 0.55, 0.16, ORANGE, -1.2, 1.3, 0.48);
     box(g, 0.8, 0.5, 0.5, 0xd9483b, 1.6, 0, 1.2); // 工具箱
   },
 
   english(g) {
-    building(g, 3.0, 2.2, 1.9, { wall: 0xfdf3e3, roofColor: 0x4a6fa5, z: -0.9 });
+    building(g, 3.0, 2.2, 1.9, { wall: 0xfdf3e3, roofColor: 0x6f9fd8, z: -0.9 });
     [[0xd9483b, -1.6], [0x5b8ac9, -0.9], [0xf0b429, -1.25]].forEach(([c, x], i) => box(g, 0.6, 0.6, 0.6, c, x, i === 2 ? 0.6 : 0, 1.2));
     bench(g, 1.4, 1.3, 0);
   },
 
   books(g) {
     const colors = [0xd9483b, 0x5b8ac9, LEAF, ORANGE, PURPLE, 0xf0b429];
-    colors.forEach((c, i) => { box(g, 2.2 - i * 0.18, 0.5, 1.6 - i * 0.1, c, 0, i * 0.5, -0.6).rotation.y = (i % 2 ? 0.18 : -0.12); });
-    box(g, 0.9, 0.08, 1.4, 0xfaf6ee, 0, 3.0, -0.6); // 頂端打開的書
+    colors.forEach((c, i) => book(g, 2.4 - i * 0.17, 0.52, 1.75 - i * 0.1, c, i * 0.52, -0.6, i % 2 ? 0.22 : -0.14));
+    openBook(g, 1.5, 1.0, 0xd9483b, 3.12, -0.6); // 頂端攤開的書
+    book(g, 0.9, 0.3, 0.65, 0xf0b429, 0, 1.0, 0.5, -1.7); // 掉在旁邊的小書
+    book(g, 0.8, 0.26, 0.6, 0x5b8ac9, 0.3, 1.0, 0.2, -1.7);
     bench(g, 1.9, 1.3, -0.3);
   },
 
@@ -130,9 +152,9 @@ export const LANDMARKS = {
   },
 
   globe(g) {
-    cyl(g, 0.6, 0.8, 0.8, 8, 0xd8cfc0, 0, 0, -0.5);
-    ball(g, 1.0, 0x5b8ac9, 0, 1.9, -0.5, 1);
-    ball(g, 0.55, LEAF, 0.45, 2.2, -0.15, 0);
+    cyl(g, 0.6, 0.8, 0.8, 8, 0xf0dfc4, 0, 0, -0.5);
+    ball(g, 1.0, 0x5b8ac9, 0, 1.9, -0.5);
+    ball(g, 0.55, LEAF, 0.45, 2.2, -0.15);
     torus(g, 1.2, 0.05, 0xf0b429, 0, 1.9, -0.5).rotation.x = 1.2;
   },
 
@@ -181,16 +203,16 @@ export const LANDMARKS = {
   hakka(g) {
     // 伙房：三合院，正身＋左右護龍
     box(g, 3.8, 1.6, 1.3, BRICK, 0, 0, -1.6);
-    roof(g, 1.6, 0.7, 4.0, 0x3d3a3a, 0, 1.6, -1.6);
+    roof(g, 1.6, 0.7, 4.0, 0x7a5a4a, 0, 1.6, -1.6);
     for (const x of [-1.6, 1.6]) {
       box(g, 1.0, 1.4, 2.0, BRICK, x, 0, 0);
-      roof(g, 1.2, 0.6, 2.2, 0x3d3a3a, x, 1.4, 0, false);
+      roof(g, 1.2, 0.6, 2.2, 0x7a5a4a, x, 1.4, 0, false);
     }
     box(g, 0.7, 1.0, 0.06, 0x6b2f22, 0, 0, -0.94);
   },
 
   stage(g) {
-    box(g, 3.6, 0.6, 2.2, 0xd8cfc0, 0, 0, -0.8);
+    box(g, 3.6, 0.6, 2.2, 0xf0dfc4, 0, 0, -0.8);
     box(g, 3.6, 2.2, 0.15, 0xb83a3a, 0, 0.6, -1.85);
     box(g, 3.9, 0.3, 2.4, PURPLE, 0, 2.8, -0.8);
     for (const x of [-1.85, 1.85]) box(g, 0.15, 2.2, 0.15, 0xe0d6c4, x, 0.6, 0.2);
@@ -198,12 +220,12 @@ export const LANDMARKS = {
 
   campus(g) {
     // 教學大樓：L 形兩層樓（P3 會換成 3D 校園地圖的縮小版）
-    box(g, 4.6, 2.8, 1.5, 0xeeeae2, 0, 0, -1.6);
-    box(g, 1.5, 2.8, 2.6, 0xeeeae2, -1.55, 0, 0.45);
+    box(g, 4.6, 2.8, 1.5, 0xf8efdf, 0, 0, -1.6);
+    box(g, 1.5, 2.8, 2.6, 0xf8efdf, -1.55, 0, 0.45);
     windows(g, 5, 0.5, 0.55, 4.2, 0.6, -0.84);
     windows(g, 5, 0.5, 0.55, 4.2, 2.0, -0.84);
-    box(g, 4.8, 0.15, 1.7, 0xc9c2b5, 0, 2.8, -1.6);
-    box(g, 1.7, 0.15, 2.8, 0xc9c2b5, -1.55, 2.8, 0.45);
+    box(g, 4.8, 0.15, 1.7, 0xe9d9bf, 0, 2.8, -1.6);
+    box(g, 1.7, 0.15, 2.8, 0xe9d9bf, -1.55, 2.8, 0.45);
     for (let i = 0; i < 3; i++) box(g, 1.0, 0.08, 1.2, 0x2c3e66, -0.6 + i * 1.1, 3.0, -1.6);
     flag(g, 1.6, 1.0, 0xd9483b);
   },
@@ -226,17 +248,17 @@ export const LANDMARKS = {
   coop(g) {
     box(g, 2.6, 1.4, 1.8, 0xb98a5e, 0, 0, -1.0);
     roof(g, 2.1, 0.8, 2.8, ROOF, 0, 1.4, -1.0);
-    const fence = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.9, 1.6), new THREE.MeshLambertMaterial({ color: 0xbfc4c8, transparent: true, opacity: 0.35 }));
+    const fence = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.9, 1.6), new THREE.MeshPhongMaterial({ color: 0xbfc4c8, transparent: true, opacity: 0.35 }));
     fence.position.set(0, 0.45, 0.8);
     g.add(fence);
     for (const [x, z] of [[-0.9, 0.5], [0.3, 1.1], [1.0, 0.4], [-0.2, 0.9]]) chicken(g, x, z);
   },
 
   gate(g) {
-    for (const x of [-1.6, 1.6]) box(g, 0.6, 2.4, 0.6, 0xd9d2c3, x, 0, -0.3);
+    for (const x of [-1.6, 1.6]) box(g, 0.6, 2.4, 0.6, 0xf2e4cd, x, 0, -0.3);
     box(g, 3.9, 0.6, 0.7, 0x8a6a8f, 0, 2.4, -0.3);
     box(g, 2.2, 0.35, 0.06, 0xfaf6ee, 0, 2.52, 0.07);
-    for (const s of [-1, 1]) box(g, 1.2, 1.0, 0.3, 0xd9d2c3, s * 2.6, 0, -0.3); // 圍牆
+    for (const s of [-1, 1]) box(g, 1.2, 1.0, 0.3, 0xf2e4cd, s * 2.6, 0, -0.3); // 圍牆
   },
 
   playground(g) {
@@ -266,7 +288,7 @@ export const LANDMARKS = {
       const a = (i / 6) * Math.PI * 2;
       cyl(g, 0.08, 0.08, 1.8, 5, 0xb5523b, Math.cos(a) * 1.3, 0, Math.sin(a) * 1.3 - 0.3);
     }
-    cyl(g, 1.5, 1.5, 0.2, 6, 0xd8cfc0, 0, 0, -0.3);
+    cyl(g, 1.5, 1.5, 0.2, 6, 0xf0dfc4, 0, 0, -0.3);
     cone(g, 1.9, 1.0, 6, PURPLE, 0, 1.8, -0.3);
     cone(g, 0.3, 0.4, 6, 0xf0b429, 0, 1.4, -0.3);
   },
@@ -284,19 +306,68 @@ function scarecrow(g, x, z) {
 }
 
 function chicken(g, x, z) {
-  ball(g, 0.2, 0xfaf6ee, x, 0.22, z, 1);
-  ball(g, 0.12, 0xfaf6ee, x + 0.14, 0.42, z, 1);
+  ball(g, 0.2, 0xfaf6ee, x, 0.22, z);
+  ball(g, 0.12, 0xfaf6ee, x + 0.14, 0.42, z);
   box(g, 0.05, 0.08, 0.1, 0xd9483b, x + 0.15, 0.52, z);
 }
 
 // 地面材質色
 export const GROUND = {
-  lawn: 0x8fbf6a,
-  stone: 0xdcd5c6,
-  street: 0xc9c2b5,
-  farm: 0xa48155,
-  sand: 0xe8d7a8,
+  lawn: 0x9ccb5e,
+  stone: 0xf9ead0,
+  street: 0xefdfc6,
+  farm: 0xa97f58,
+  sand: 0xf2dfae,
 };
+// 外圈比內圈鮮一點，像軟糖的邊
+export const GROUND_RIM = {
+  lawn: 0x86bb4c,
+  stone: 0xf2cfa2,
+  street: 0xe3cba8,
+  farm: 0x86bb4c,
+  sand: 0xe8c98e,
+};
+
+const FLOWERS = [0xf28fad, 0xf7c948, 0xfaf6ee, 0xc9b6e4, 0xf2826a];
+
+/** 地上的小東西（草叢、花、小石頭、蘑菇、小雞）：都很矮，小人走過去也不違和。放在格子前緣與外圈。 */
+export function scatterTile(sc, cx, y, cz, kind, rnd) {
+  const spot = () => {
+    if (rnd() < 0.45) return [(rnd() - 0.5) * 5, 1.9 + rnd() * 0.9]; // 建物前面的空地
+    const a = rnd() * Math.PI * 2, r = 3.25 + rnd() * 0.5;
+    return [Math.cos(a) * r, Math.sin(a) * r];
+  };
+  const lawn = kind === 'lawn';
+  for (let i = 0; i < (lawn ? 7 : 2); i++) { // 草叢
+    if (kind === 'farm') break;
+    const [x, z] = spot();
+    const c = lawn ? 0x6fb04a : 0x8fbb60;
+    sc.add('blade', cx + x, y, cz + z, 0.8 + rnd() * 0.5, c);
+    sc.add('blade', cx + x + 0.1, y, cz + z + 0.05, 0.6 + rnd() * 0.3, c);
+  }
+  for (let i = 0; i < (lawn ? 4 : 1); i++) { // 花
+    if (kind === 'farm') break;
+    const [x, z] = spot();
+    const c = FLOWERS[Math.floor(rnd() * FLOWERS.length)];
+    sc.add('stem', cx + x, y, cz + z, 1, 0x5a9e45);
+    sc.add('bloom', cx + x, y + 0.27, cz + z, 0.9 + rnd() * 0.4, c);
+  }
+  for (let i = 0; i < 2; i++) { // 小石頭
+    const [x, z] = spot();
+    sc.add('pebble', cx + x, y + 0.03, cz + z, 0.7 + rnd() * 0.7, lawn ? 0xe8e0d0 : 0xd9c7a8, 0.6);
+  }
+  if (lawn && rnd() < 0.45) { // 蘑菇
+    const [x, z] = spot();
+    sc.add('stem', cx + x, y, cz + z, 1.2, 0xfaf1dd);
+    sc.add('cap', cx + x, y + 0.3, cz + z, 1.1, 0xe85d4f, 0.7);
+  }
+  if (lawn && rnd() < 0.35) { // 小雞
+    const [x, z] = spot();
+    sc.add('chick', cx + x, y + 0.13, cz + z, 1, 0xf7d65c, 0.92);
+    sc.add('chickHead', cx + x + 0.08, y + 0.28, cz + z + 0.05, 1, 0xf7d65c);
+    sc.add('beak', cx + x + 0.17, y + 0.28, cz + z + 0.08, 1, 0xf2913d);
+  }
+}
 
 /** 角落裝飾：樹與路燈放在六角形的頂點附近，避開中間的散步路。 */
 export function decorate(g, tile, rnd) {

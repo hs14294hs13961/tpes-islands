@@ -1,13 +1,14 @@
 // 依島嶼設定蓋出整個群島：六角格土台、地標、淺灘光暈、木棧橋。
 import * as THREE from 'three';
-import { HEX, TOP, axialToWorld, cyl, seeded } from './kit.js';
-import { LANDMARKS, GROUND, decorate } from './landmarks.js';
+import { RoundedBoxGeometry } from 'three/addons/RoundedBoxGeometry.js';
+import { HEX, TOP, axialToWorld, hexPlate, seeded } from './kit.js';
+import { LANDMARKS, GROUND, GROUND_RIM, decorate, scatterTile } from './landmarks.js';
+import { createScatter } from './scatter.js';
 import { RING } from '../data/islands.js';
 
-const EARTH = 0x9c7552;
-const WET_ROCK = 0x7d5d40;
-const PLANK = 0xa77a50;
-const POST = 0x6b4a33;
+const ROCK = 0xf3e4c6;       // 奶油色圓石土台
+const PLANK = 0xd08a52;
+const POST = 0xa8693c;
 
 /** 淺灘光暈貼圖：中心白、往外透明，顏色由材質 color 決定。 */
 function haloTexture() {
@@ -33,6 +34,7 @@ export function buildWorld(scene, islands) {
   const pickables = [];
   const lamps = [];
   const flames = [];
+  const scatter = createScatter();
 
   const clusters = islands.map((isl, ci) => {
     const rnd = seeded(ci * 97 + 13);
@@ -48,17 +50,21 @@ export function buildWorld(scene, islands) {
       tg.position.copy(pos);
       group.add(tg);
 
-      cyl(tg, HEX * 0.97, HEX * 0.88, 3.0, 6, EARTH, 0, -2.0, 0);
-      cyl(tg, HEX * 0.99, HEX * 0.99, 0.5, 6, WET_ROCK, 0, -0.35, 0);
-      const ground = cyl(tg, HEX * 0.95, HEX * 0.95, 0.25, 6, GROUND[t.ground] || GROUND.lawn, 0, TOP - 0.25, 0);
-      ground.userData.pick = { cluster: isl.id, tile: i };
-      pickables.push(ground);
+      hexPlate(tg, HEX * 1.06, TOP + 0.6, ROCK, -0.9);
+      const kind = GROUND[t.ground] ? t.ground : 'lawn';
+      const rim = hexPlate(tg, HEX * 0.97, 0.42, GROUND_RIM[kind], TOP - 0.42 + 0.02);
+      const ground = hexPlate(tg, HEX * 0.84, 0.12, GROUND[kind], TOP - 0.12);
+      for (const m of [rim, ground]) {
+        m.userData.pick = { cluster: isl.id, tile: i };
+        pickables.push(m);
+      }
 
       const top = new THREE.Group();
       top.position.y = TOP;
       tg.add(top);
       (LANDMARKS[t.type] || LANDMARKS.meadow)(top, rnd);
       lamps.push(...decorate(top, t, rnd));
+      scatterTile(scatter, pos.x, TOP, pos.z, kind, rnd);
       top.traverse((o) => { if (o.userData.flame) flames.push(o); });
 
       return { ...t, index: i, q, r, pos };
@@ -81,6 +87,7 @@ export function buildWorld(scene, islands) {
   });
 
   buildBridges(root, clusters);
+  scatter.build(root);
   return { root, clusters, pickables, lamps, flames, haloMat };
 }
 
@@ -127,9 +134,9 @@ function buildBridges(root, clusters) {
     }
   }
 
-  const plankMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 0.12, 0.42), new THREE.MeshLambertMaterial({ color: PLANK, flatShading: true }), planks.length);
+  const plankMesh = new THREE.InstancedMesh(new RoundedBoxGeometry(1.8, 0.16, 0.5, 1, 0.07), new THREE.MeshPhongMaterial({ color: PLANK, shininess: 40, specular: 0x222222 }), planks.length);
   planks.forEach((mm, i) => plankMesh.setMatrixAt(i, mm));
-  const postMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.14, 1, 0.14), new THREE.MeshLambertMaterial({ color: POST, flatShading: true }), posts.length);
+  const postMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.09, 0.09, 1, 8), new THREE.MeshPhongMaterial({ color: POST, shininess: 40, specular: 0x222222 }), posts.length);
   posts.forEach((mm, i) => postMesh.setMatrixAt(i, mm));
   for (const im of [plankMesh, postMesh]) {
     im.castShadow = true;
