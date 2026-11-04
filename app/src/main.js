@@ -54,6 +54,7 @@ loadCharacters(people.upgrade); // 不等模型，先讓島浮出來，下載好
 const bounds = new THREE.Box3();
 world.clusters.filter((c) => !c.small).forEach((c) => bounds.expandByPoint(c.center));
 const home = { target: bounds.getCenter(new THREE.Vector3()).setY(0), dist: 175, polar: 0.82 };
+home.target.z += 12; // 校園島最南端的校門要露在下方訊息框之上
 
 // 直式手機畫面窄，鏡頭要拉遠到左右的島都放得進來
 function fitHome() {

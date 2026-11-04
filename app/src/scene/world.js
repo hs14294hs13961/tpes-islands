@@ -1,6 +1,7 @@
 // 依島嶼設定蓋出整個群島：六角格土台、地標、淺灘光暈、木棧橋。
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/RoundedBoxGeometry.js';
+import { mergeGeometries } from '../../vendor/three/utils/BufferGeometryUtils.js';
 import { HEX, TOP, axialToWorld, hexPlate, seeded } from './kit.js';
 import { LANDMARKS, GROUND, GROUND_RIM, decorate, scatterTile } from './landmarks.js';
 import { createScatter } from './scatter.js';
@@ -42,7 +43,7 @@ export function buildWorld(scene, islands) {
     root.add(group);
 
     const tiles = isl.tiles.map((t, i) => {
-      const [dq, dr] = RING[i];
+      const [dq, dr] = t.at || RING[i]; // t.at：不在一般環狀位置的格子
       const q = isl.center[0] + dq;
       const r = isl.center[1] + dr;
       const pos = axialToWorld(q, r);
@@ -63,8 +64,10 @@ export function buildWorld(scene, islands) {
       top.position.y = TOP;
       tg.add(top);
       (LANDMARKS[t.type] || LANDMARKS.meadow)(top, rnd);
-      lamps.push(...decorate(top, t, rnd));
-      scatterTile(scatter, pos.x, TOP, pos.z, kind, rnd);
+      if (!t.bare) { // bare：照真實場景手工佈置的地標，不再隨機加樹和小花
+        lamps.push(...decorate(top, t, rnd));
+        scatterTile(scatter, pos.x, TOP, pos.z, kind, rnd);
+      }
       top.traverse((o) => { if (o.userData.flame) flames.push(o); });
 
       return { ...t, index: i, q, r, pos };
@@ -72,8 +75,10 @@ export function buildWorld(scene, islands) {
 
     // 同一座島裡相鄰的格子（小人散步用）
     for (const a of tiles) {
-      a.neighbors = tiles.filter((b) => b !== a && Math.abs(a.q - b.q) <= 1 && Math.abs(a.r - b.r) <= 1 && Math.abs(a.q + a.r - b.q - b.r) <= 1);
+      a.neighbors = tiles.filter((b) => b !== a && !b.noWalk && Math.abs(a.q - b.q) <= 1 && Math.abs(a.r - b.r) <= 1 && Math.abs(a.q + a.r - b.q - b.r) <= 1);
     }
+
+    bakeStatic(group);
 
     const center = tiles.reduce((s, t) => s.add(t.pos), new THREE.Vector3()).divideScalar(tiles.length);
     const radius = Math.max(...tiles.map((t) => t.pos.distanceTo(center))) + HEX;
@@ -89,6 +94,42 @@ export function buildWorld(scene, islands) {
   buildBridges(root, clusters);
   scatter.build(root);
   return { root, clusters, pickables, lamps, flames, haloMat };
+}
+
+/**
+ * 把一座島上不會動、同材質的物件合併成一個網格，繪圖呼叫從幾百次降到幾十次，手機才跑得動。
+ * 要點擊的地面、會發光的燈泡與火焰（userData 有標記）和有貼圖、半透明的物件不合併。
+ */
+function bakeStatic(group) {
+  group.updateMatrixWorld(true);
+  const buckets = new Map();
+  group.traverse((o) => {
+    if (!o.isMesh || o.isInstancedMesh || Object.keys(o.userData).length) return;
+    const m = o.material;
+    if (Array.isArray(m) || m.map || m.transparent) return;
+    const key = `${m.uuid}|${o.castShadow}|${o.receiveShadow}`;
+    if (!buckets.has(key)) buckets.set(key, { material: m, cast: o.castShadow, receive: o.receiveShadow, items: [] });
+    buckets.get(key).items.push(o);
+  });
+  for (const { material, cast, receive, items } of buckets.values()) {
+    if (items.length < 2) continue;
+    const geos = items.map((o) => {
+      const src = o.geometry;
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', src.attributes.position.clone());
+      g.setAttribute('normal', src.attributes.normal.clone());
+      if (src.index) g.setIndex(src.index.clone());
+      else g.setIndex([...Array(src.attributes.position.count).keys()]);
+      g.applyMatrix4(o.matrixWorld);
+      return g;
+    });
+    const merged = new THREE.Mesh(mergeGeometries(geos), material);
+    geos.forEach((g) => g.dispose());
+    merged.castShadow = cast;
+    merged.receiveShadow = receive;
+    group.add(merged);
+    items.forEach((o) => o.parent.remove(o));
+  }
 }
 
 /** 本島連到每一座島的木棧橋（外圈的畢業生小島不接橋）。用 InstancedMesh 一次畫完所有木板。 */

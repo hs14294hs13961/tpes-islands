@@ -1,8 +1,9 @@
 // 每一格的地標。原點＝格子地面中心，建物要收在半徑約 3 公尺內，
 // 外圈 3.6 公尺是小人散步的路，最外圈角落放樹和路燈。
-// 之後 Higgsfield 的 3D 地標（PRD 第 11 節 M4）會依 type 替換這裡的程式版本。
+// 九種特殊地標照真實校園蓋，放在 campus.js。
 import * as THREE from 'three';
 import { box, cyl, cone, ball, torus, roof, windows, tree, plumTree, xiancao, lamp, bench, flag, GLOW } from './kit.js';
+import { gate, court, campus, stage as campusStage, treehouse, pond, paddy, coop, readingCorner } from './campus.js';
 
 const WALL = 0xf8e8cf;
 const WALL_WHITE = 0xfbf3e4;
@@ -218,70 +219,7 @@ export const LANDMARKS = {
     for (const x of [-1.85, 1.85]) box(g, 0.15, 2.2, 0.15, 0xe0d6c4, x, 0.6, 0.2);
   },
 
-  campus(g) {
-    // 教學大樓：L 形兩層樓（P3 會換成 3D 校園地圖的縮小版）
-    box(g, 4.6, 2.8, 1.5, 0xf8efdf, 0, 0, -1.6);
-    box(g, 1.5, 2.8, 2.6, 0xf8efdf, -1.55, 0, 0.45);
-    windows(g, 5, 0.5, 0.55, 4.2, 0.6, -0.84);
-    windows(g, 5, 0.5, 0.55, 4.2, 2.0, -0.84);
-    box(g, 4.8, 0.15, 1.7, 0xe9d9bf, 0, 2.8, -1.6);
-    box(g, 1.7, 0.15, 2.8, 0xe9d9bf, -1.55, 2.8, 0.45);
-    for (let i = 0; i < 3; i++) box(g, 1.0, 0.08, 1.2, 0x2c3e66, -0.6 + i * 1.1, 3.0, -1.6);
-    flag(g, 1.6, 1.0, 0xd9483b);
-  },
-
-  track(g) {
-    const t = cyl(g, 3.0, 3.0, 0.06, 24, 0xc8574a, 0, 0, -0.2);
-    t.scale.z = 0.7;
-    const f = cyl(g, 2.3, 2.3, 0.08, 24, 0x6fae5f, 0, 0, -0.2);
-    f.scale.z = 0.55;
-    box(g, 0.08, 0.09, 1.6, 0xffffff, 0, 0, -0.2);
-  },
-
-  xiancao(g) {
-    for (let r = 0; r < 4; r++) {
-      box(g, 3.8, 0.12, 0.5, 0x6b4f33, 0, 0, -1.9 + r * 0.95);
-      for (let i = 0; i < 6; i++) xiancao(g, -1.7 + i * 0.68, -1.9 + r * 0.95, 1.0);
-    }
-  },
-
-  coop(g) {
-    box(g, 2.6, 1.4, 1.8, 0xb98a5e, 0, 0, -1.0);
-    roof(g, 2.1, 0.8, 2.8, ROOF, 0, 1.4, -1.0);
-    const fence = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.9, 1.6), new THREE.MeshPhongMaterial({ color: 0xbfc4c8, transparent: true, opacity: 0.35 }));
-    fence.position.set(0, 0.45, 0.8);
-    g.add(fence);
-    for (const [x, z] of [[-0.9, 0.5], [0.3, 1.1], [1.0, 0.4], [-0.2, 0.9]]) chicken(g, x, z);
-  },
-
-  gate(g) {
-    for (const x of [-1.6, 1.6]) box(g, 0.6, 2.4, 0.6, 0xf2e4cd, x, 0, -0.3);
-    box(g, 3.9, 0.6, 0.7, 0x8a6a8f, 0, 2.4, -0.3);
-    box(g, 2.2, 0.35, 0.06, 0xfaf6ee, 0, 2.52, 0.07);
-    for (const s of [-1, 1]) box(g, 1.2, 1.0, 0.3, 0xf2e4cd, s * 2.6, 0, -0.3); // 圍牆
-  },
-
-  playground(g) {
-    box(g, 4.0, 0.04, 3.0, 0x7cc06c, 0, 0, -0.4);
-    for (const x of [-1.6, 0.0]) { // 鳥巢鞦韆的 A 字架
-      box(g, 0.1, 2.0, 0.1, 0x5b8ac9, x, 0, -1.4).rotation.z = x ? 0.2 : -0.2;
-    }
-    box(g, 1.9, 0.1, 0.1, 0x5b8ac9, -0.8, 1.95, -1.4);
-    torus(g, 0.45, 0.1, ORANGE, -0.8, 0.8, -1.4).rotation.x = Math.PI / 2;
-    box(g, 2.0, 0.1, 0.3, 0xf0b429, 1.3, 0.35, 0.6).rotation.z = 0.2; // 翹翹板
-    cyl(g, 0.12, 0.15, 0.35, 6, 0x5b8ac9, 1.3, 0, 0.6);
-  },
-
-  paddy(g) {
-    for (let r = 0; r < 2; r++) {
-      for (let c = 0; c < 2; c++) {
-        const x = -1.1 + c * 2.2;
-        const z = -1.4 + r * 2.0;
-        box(g, 2.0, 0.08, 1.8, 0x8fbfb4, x, 0, z);
-        for (let i = 0; i < 9; i++) cyl(g, 0.03, 0.05, 0.5, 4, 0x9cc35a, x - 0.7 + (i % 3) * 0.7, 0.05, z - 0.6 + Math.floor(i / 3) * 0.6);
-      }
-    }
-  },
+  gate, court, campus, campusStage, treehouse, pond, paddy, coop, readingCorner,
 
   pavilion(g) {
     for (let i = 0; i < 6; i++) {
@@ -303,12 +241,6 @@ function scarecrow(g, x, z) {
   box(g, 0.9, 0.08, 0.08, WOOD, x, 1.0, z);
   ball(g, 0.2, 0xf2d7a8, x, 1.55, z);
   cone(g, 0.32, 0.25, 8, 0xe2c27a, x, 1.65, z);
-}
-
-function chicken(g, x, z) {
-  ball(g, 0.2, 0xfaf6ee, x, 0.22, z);
-  ball(g, 0.12, 0xfaf6ee, x + 0.14, 0.42, z);
-  box(g, 0.05, 0.08, 0.1, 0xd9483b, x + 0.15, 0.52, z);
 }
 
 // 地面材質色

@@ -160,8 +160,8 @@ export function plumTree(p, x, z, s = 1) {
 /** 仙草：深綠小叢＋淡紫花穗。 */
 export function xiancao(p, x, z, s = 1) {
   ball(p, 0.32 * s, 0x3f7f4c, x, 0.25 * s, z);
-  cyl(p, 0.05 * s, 0.07 * s, 0.45 * s, 4, 0xc9b6e4, x + 0.08 * s, 0.4 * s, z);
-  cyl(p, 0.05 * s, 0.07 * s, 0.35 * s, 4, 0xe4daf2, x - 0.1 * s, 0.35 * s, z + 0.06 * s);
+  cone(p, 0.05 * s, 0.5 * s, 6, 0xc9b6e4, x + 0.08 * s, 0.4 * s, z);
+  cone(p, 0.045 * s, 0.4 * s, 6, 0xe4daf2, x - 0.1 * s, 0.35 * s, z + 0.06 * s);
 }
 
 export function lamp(p, x, z) {

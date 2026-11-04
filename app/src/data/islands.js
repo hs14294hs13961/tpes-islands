@@ -74,19 +74,21 @@ const FIXED = [
   {
     id: 'campus', name: '太平校園島', en: 'CAMPUS ISLE', center: [-1, 5],
     tagline: '真實校園的縮小版；之後可以從這裡走進 3D 校園地圖',
+    // 依真實校園配置：校門在最南端，進門是水池，正中央是球場，後方是教學大樓與司令台
     tiles: [
-      { name: '教學大樓', type: 'campus', ground: 'stone' },
-      { name: '操場跑道', type: 'track', ground: 'lawn' },
-      { name: '仙草田', type: 'xiancao', ground: 'farm' },
-      { name: '雞舍', type: 'coop', ground: 'lawn' },
-      { name: '校門', type: 'gate', ground: 'street' },
-      { name: '共融遊戲區', type: 'playground', ground: 'lawn' },
-      { name: '水稻田', type: 'paddy', ground: 'farm' },
+      { name: '球場', type: 'court', ground: 'lawn', bare: true },
+      { name: '樹屋', type: 'treehouse', ground: 'lawn', bare: true },
+      { name: '水池', type: 'pond', ground: 'lawn', bare: true },
+      { name: '水稻田', type: 'paddy', ground: 'lawn', bare: true },
+      { name: '夢想雞舍', type: 'coop', ground: 'lawn', bare: true },
+      { name: '教學大樓', type: 'campus', ground: 'stone', bare: true, noWalk: true },
+      { name: '司令台', type: 'campusStage', ground: 'stone', bare: true, noWalk: true },
+      { name: '校門', type: 'gate', ground: 'street', bare: true, at: [-1, 2] },
     ],
     people: [
       { role: '叔公', gender: 'm', tile: 0, worker: true, age: 'mid' },
-      { role: '叔公', gender: 'm', tile: 2, worker: true, age: 'old' },
       { role: '叔公', gender: 'm', tile: 4, worker: true, age: 'old' },
+      { role: '叔公', gender: 'm', tile: 7, worker: true, age: 'old' },
     ],
   },
   {
@@ -107,7 +109,10 @@ export function buildIslandList(currentYear, data) {
     const stats = data.cohorts?.[c.entry] || { total: 0, subjects: {} };
     const subjects = Object.entries(stats.subjects).slice(0, RING.length - 2);
     const tiles = [
-      { name: `${GRADE_NAME[grade]}甲教室`, type: 'classroom', ground: 'lawn' },
+      // 五甲教室有閱讀角，照真實教室做成剖面
+      grade === 5
+        ? { name: '五甲教室・閱讀角', type: 'readingCorner', ground: 'lawn' }
+        : { name: `${GRADE_NAME[grade]}甲教室`, type: 'classroom', ground: 'lawn' },
       { name: '成果館', type: 'gallery', ground: 'stone', count: stats.total },
       ...subjects.map(([s, n]) => ({ name: s, type: SUBJECT_TYPE[s] || 'meadow', ground: 'lawn', count: n, subject: s })),
     ];
