@@ -1,6 +1,7 @@
 // 畫面上的介面：品牌卡、統計數字、時段、工具列、小管家、格子資訊卡。
 import { taipeiClock } from '../scene/env.js';
 import { recordsFor, countView } from '../data/records.js';
+import { createReadingPanel } from './readingPanel.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -9,7 +10,7 @@ function rocDate(iso) {
   return `${y - 1911}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
 }
 
-export function createHud({ school, data, residents, onTime, onToggle, onHome, onBird }) {
+export function createHud({ school, data, reading, residents, onGo, onTime, onToggle, onHome, onBird }) {
   $('brand-sub').textContent = data.source === 'demo'
     ? `備份資料・成果截至 ${rocDate(data.asOf)}`
     : `即時・${rocDate(data.asOf)} 更新`;
@@ -113,6 +114,32 @@ export function createHud({ school, data, residents, onTime, onToggle, onHome, o
     $('viewer-body').replaceChildren(el);
     viewer.hidden = false;
   }
+  // 閱讀島的文件：雲端硬碟、YouTube 在站內預覽，其他網站（得報、教材包）另開分頁
+  function embedUrlOf(url) {
+    const yt = url.match(/youtube\.com\/watch\?v=([\w-]+)/)?.[1];
+    if (yt) return `https://www.youtube.com/embed/${yt}`;
+    if (/^https:\/\/drive\.google\.com\/file\/d\//.test(url)) return url.replace(/\/(view|edit).*$/, '/preview');
+    if (/^https:\/\/docs\.google\.com\/(document|presentation|spreadsheets)\//.test(url)) return url.replace(/\/(edit|view|pub).*$/, '/preview');
+    return null;
+  }
+  function openDoc({ title, meta, url }) {
+    const embed = embedUrlOf(url);
+    if (!embed) {
+      if (isHttps(url)) window.open(url, '_blank', 'noopener');
+      return;
+    }
+    $('viewer-meta').textContent = meta || '';
+    $('viewer-title').textContent = title;
+    $('viewer-desc').hidden = true;
+    $('viewer-open').href = url;
+    const el = document.createElement('iframe');
+    el.src = embed;
+    el.title = title;
+    el.allow = 'autoplay; fullscreen';
+    el.referrerPolicy = 'no-referrer';
+    $('viewer-body').replaceChildren(el);
+    viewer.hidden = false;
+  }
   $('viewer-close').addEventListener('click', closeViewer);
   viewer.addEventListener('click', (e) => { if (e.target === viewer) closeViewer(); });
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && !viewer.hidden) closeViewer(); });
@@ -151,7 +178,29 @@ export function createHud({ school, data, residents, onTime, onToggle, onHome, o
   const card = $('info-card');
   $('info-close').addEventListener('click', () => card.classList.remove('open'));
   $('info-more').href = school.uploadUrl;
+  const readingPanel = createReadingPanel({
+    root: $('read-panel'),
+    reading,
+    openDoc,
+    recordCard,
+    onGoTile: (index) => onGo('reading', index),
+  });
   function showInfo({ cluster, tile }) {
+    const isReading = cluster.id === 'reading';
+    card.classList.toggle('reading', isReading);
+    $('read-panel').hidden = !isReading;
+    if (isReading) {
+      $('info-island').textContent = `${cluster.name}・${cluster.en}`;
+      $('info-title').textContent = tile ? tile.name : cluster.name;
+      $('info-meta').textContent = '';
+      $('info-desc').textContent = tile ? '' : cluster.tagline;
+      $('info-records').hidden = true;
+      $('info-more').hidden = tile?.section !== 'gallery';
+      $('info-link').hidden = true;
+      readingPanel.show(tile, data);
+      card.classList.add('open');
+      return;
+    }
     $('info-island').textContent = cluster.en ? `${cluster.name}・${cluster.en}` : cluster.name;
     $('info-title').textContent = tile ? tile.name : cluster.name;
     const bits = [];
@@ -165,6 +214,13 @@ export function createHud({ school, data, residents, onTime, onToggle, onHome, o
     box.scrollTop = 0;
     box.hidden = !list.length;
     $('info-more').hidden = !list.length;
+    // 地標之間的捷徑：太平歲閱館、閱讀角都能直接到閱讀島
+    const link = tile?.link;
+    $('info-link').hidden = !link;
+    if (link) {
+      $('info-link').textContent = `${link.label} ›`;
+      $('info-link').onclick = () => onGo(link.cluster);
+    }
     card.classList.add('open');
   }
 

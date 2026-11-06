@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { box, cyl, cone, ball, torus, roof, windows, tree, plumTree, xiancao, lamp, bench, flag, GLOW } from './kit.js';
 import { gate, court, campus, stage as campusStage, treehouse, pond, paddy, coop, readingCorner } from './campus.js';
+import { bookHall, bookShelves, quizBooth, newsstand, sheetHut, familyStage, readingGallery } from './reading.js';
 
 const WALL = 0xf8e8cf;
 const WALL_WHITE = 0xfbf3e4;
@@ -52,6 +53,7 @@ function building(g, w, d, h, { wall = WALL, roofColor = ROOF, z = -0.6, x = 0, 
 }
 
 export const LANDMARKS = {
+  bookHall, bookShelves, quizBooth, newsstand, sheetHut, familyStage, readingGallery,
   classroom(g) {
     building(g, 4.4, 2.4, 2.0, { z: -0.9 });
     for (let i = 0; i < 5; i++) box(g, 0.18, 2.0, 0.18, 0xe0d6c4, -2 + i, 0, 0.55); // 走廊柱

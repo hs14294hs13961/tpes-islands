@@ -168,11 +168,43 @@ function bakeLogo(root, logo, spec, { cover, erase }) {
   mesh.material.needsUpdate = true;
 }
 
+// 原始動作的手幾乎貼著身體，遠看像沒有擺手，所以依腿的節奏再加一段前後擺動。單位：弧度
+const ARM_SWING = 0.36;
+const ELBOW_REST = 0.08, ELBOW_SWING = 0.28;
+
+// 腿的節奏：左右大腿前後的差，1＝右腿最前面、-1＝左腿最前面。原始動作左右不對稱，先扣掉平均，手才不會只往前擺
+function legRhythm(clip, src) {
+  const thigh = (name) => {
+    const bone = src.getObjectByName(name);
+    const axis = bone.children[0].position.clone().normalize();
+    const parent = bone.parent.getWorldQuaternion(new THREE.Quaternion());
+    const track = clip.tracks.find((t) => t.name === `${name}.quaternion`).createInterpolant();
+    const q = new THREE.Quaternion(), v = new THREE.Vector3();
+    return (t) => v.copy(axis).applyQuaternion(q.fromArray(track.evaluate(t))).applyQuaternion(parent).z;
+  };
+  const left = thigh('LeftUpLeg'), right = thigh('RightUpLeg');
+  const raw = (t) => right(t) - left(t);
+  const samples = Array.from({ length: 120 }, (_, i) => raw((clip.duration * i) / 120));
+  const mean = samples.reduce((n, v) => n + v, 0) / samples.length;
+  const peak = Math.max(...samples.map((v) => Math.abs(v - mean)));
+  return (t) => (raw(t) - mean) / peak;
+}
+
+// 某根手臂骨頭在時間 t 要往前轉多少（遠離腳的方向），沒有這根骨頭就回 null
+function armForward(name, s) {
+  const side = name.startsWith('Left') ? 1 : -1; // 右腿在前時左手在前
+  if (name.endsWith('ForeArm')) return ELBOW_REST + ELBOW_SWING * Math.max(0, s * side);
+  if (name.endsWith('Arm')) return ARM_SWING * s * side;
+  return null;
+}
+
 // 全部島民共用男 1 的走路動作。原始動作連骨頭長度都寫死，直接套別人會被壓扁，
 // 所以只取「相對站姿轉了多少」，再加到各自的站姿上；臀部位移照腿長比例縮放。
 function retargetWalk(clip, src, tgt) {
   const tracks = [];
-  const q = new THREE.Quaternion();
+  const q = new THREE.Quaternion(), turn = new THREE.Quaternion();
+  const sideways = new THREE.Vector3(1, 0, 0);
+  const rhythm = legRhythm(clip, src);
   for (const t of clip.tracks) {
     const [name, prop] = t.name.split('.');
     const a = src.getObjectByName(name), b = tgt.getObjectByName(name);
@@ -180,7 +212,16 @@ function retargetWalk(clip, src, tgt) {
     if (prop === 'quaternion') {
       const inv = a.quaternion.clone().invert();
       const values = new Float32Array(t.values.length);
-      for (let i = 0; i < values.length; i += 4) q.fromArray(t.values, i).multiply(inv).multiply(b.quaternion).toArray(values, i);
+      const isArm = armForward(name, 0) !== null;
+      const parent = b.parent.getWorldQuaternion(new THREE.Quaternion()), parentInv = parent.clone().invert();
+      for (let i = 0; i < values.length; i += 4) {
+        q.fromArray(t.values, i).multiply(inv).multiply(b.quaternion);
+        if (isArm) { // 繞身體左右軸前後轉；換算到父骨頭座標，每款站姿不同也一樣往前
+          turn.setFromAxisAngle(sideways, -armForward(name, rhythm(t.times[i / 4])));
+          q.premultiply(parentInv.clone().multiply(turn).multiply(parent));
+        }
+        q.toArray(values, i);
+      }
       tracks.push(new THREE.QuaternionKeyframeTrack(t.name, t.times, values));
     } else if (prop === 'position' && name === 'Hips') {
       const k = b.position.y / a.position.y;

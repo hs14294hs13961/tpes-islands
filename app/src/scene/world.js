@@ -63,7 +63,7 @@ export function buildWorld(scene, islands) {
       const top = new THREE.Group();
       top.position.y = TOP;
       tg.add(top);
-      (LANDMARKS[t.type] || LANDMARKS.meadow)(top, rnd);
+      (LANDMARKS[t.type] || LANDMARKS.meadow)(top, rnd, t);
       if (!t.bare) { // bare：照真實場景手工佈置的地標，不再隨機加樹和小花
         lamps.push(...decorate(top, t, rnd));
         scatterTile(scatter, pos.x, TOP, pos.z, kind, rnd);
@@ -132,7 +132,7 @@ function bakeStatic(group) {
   }
 }
 
-/** 本島連到每一座島的木棧橋（外圈的畢業生小島不接橋）。用 InstancedMesh 一次畫完所有木板。 */
+/** 本島連到每一座島的木棧橋（外圈的畢業生小島不接橋；bridgeFrom 可改接別的島）。用 InstancedMesh 一次畫完所有木板。 */
 function buildBridges(root, clusters) {
   const hub = clusters.find((c) => c.id === 'hub');
   const planks = [];
@@ -144,7 +144,8 @@ function buildBridges(root, clusters) {
   for (const c of clusters) {
     if (c === hub || c.small) continue;
     let best = null;
-    for (const a of hub.tiles) {
+    const from = clusters.find((x) => x.id === c.bridgeFrom) || hub;
+    for (const a of from.tiles) {
       for (const b of c.tiles) {
         const d = a.pos.distanceTo(b.pos);
         if (!best || d < best.d) best = { a, b, d };

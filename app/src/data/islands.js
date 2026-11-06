@@ -10,6 +10,8 @@ export const SCHOOL = {
   uploadUrl: 'https://script.google.com/a/macros/tpes.hcc.edu.tw/s/AKfycbyzgcnqi0FfQzPmVZv7503wCspJNTwYMViYlbnIdPQ2ZdDHCZK90GeBCkwLJp4wmNCO/exec',
   // 電子書櫃的唯讀資料介面（只回傳上架成果的公開欄位）
   apiUrl: 'https://script.google.com/macros/s/AKfycbyzgcnqi0FfQzPmVZv7503wCspJNTwYMViYlbnIdPQ2ZdDHCZK90GeBCkwLJp4wmNCO/exec?api=islands',
+  // 閱讀島內容表的唯讀介面（獨立的 Apps Script，部署後把網址填在這裡；空字串＝用內建 reading.json）
+  readingApiUrl: 'https://script.google.com/macros/s/AKfycby02HfGXZnDwb-CrnGh5MJWlNm8AT1c0zZA2SZkeZttXTutywqKsqJX9DV36lQsIJPz/exec',
 };
 
 // 品牌色（PRD 第 7 節：仙草花紫＋小雞橘）
@@ -58,7 +60,7 @@ const FIXED = [
       { name: '主題活動廣場', type: 'plaza', ground: 'stone', subject: '主題活動' },
       { name: '校長室', type: 'principal', ground: 'lawn' },
       { name: '英語村', type: 'english', ground: 'lawn' },
-      { name: '太平歲閱館', type: 'library', ground: 'stone', subject: '太平歲閱' },
+      { name: '太平歲閱館', type: 'library', ground: 'stone', subject: '太平歲閱', link: { cluster: 'reading', label: '到閱讀島看本月書展' } },
       { name: '行政中心', type: 'office', ground: 'stone' },
       { name: '農情永續田', type: 'farm', ground: 'farm', subject: '農情永續' },
       { name: '智造太平工坊', type: 'maker', ground: 'stone', subject: '智造太平' },
@@ -99,13 +101,43 @@ const FIXED = [
     tiles: [{ name: '畢業紀念亭', type: 'pavilion', ground: 'lawn' }],
     people: [],
   },
+  {
+    // 不隨學年變動；內容每月換，由閱讀島內容表控制。guest：不算在島民人數裡
+    id: 'reading', name: '閱讀島', en: 'READING ISLE', center: [-6, 5], bridgeFrom: 'campus',
+    tagline: '全校一起讀的每月主題書展：書單、問題卡、文章、學習單與大家的閱讀成果',
+    tiles: [
+      { name: '主題書展館', type: 'bookHall', ground: 'stone', section: 'hall', bare: true },
+      { name: '書櫃長廊', type: 'bookShelves', ground: 'lawn', section: 'books' },
+      { name: '問題卡亭', type: 'quizBooth', ground: 'lawn', section: 'questions' },
+      { name: '得報閱報亭', type: 'newsstand', ground: 'stone', section: 'articles' },
+      { name: '學習單小屋', type: 'sheetHut', ground: 'lawn', section: 'sheets' },
+      { name: '四大家族擂台', type: 'familyStage', ground: 'stone', section: 'events' },
+      { name: '閱讀成果廊', type: 'readingGallery', ground: 'lawn', section: 'gallery' },
+    ],
+    people: [
+      { role: '故事媽媽', gender: 'f', tile: 5, guest: true },
+      { student: true, gender: 'm', tile: 1, guest: true },
+      { student: true, gender: 'f', tile: 6, guest: true },
+    ],
+  },
 ];
+
+// 閱讀島格子上的數字與旗幟顏色，都跟著目前的書展
+function readingIsland(f, reading) {
+  const m = reading.months[reading.current];
+  const counts = { books: m.books.length, questions: m.questions.length, articles: m.articles.length, sheets: reading.worksheets.length, events: m.events.length, gallery: reading.recordCount };
+  return {
+    ...f, kind: f.id,
+    sub: `${m.month} 月書展・SDG ${m.sdg}`,
+    tiles: f.tiles.map((t) => ({ ...t, count: counts[t.section], month: m, color: m.color })),
+  };
+}
 
 /**
  * 依目前學年度與成果資料，組出完整群島。
  * 班級島：中心＝教室、接著成果館，再依件數多寡長出科目格（最多補滿 7 格）。
  */
-export function buildIslandList(currentYear, data) {
+export function buildIslandList(currentYear, data, reading) {
   const classes = COHORTS.map((c) => {
     const grade = currentYear - c.entry + 1;
     const stats = data.cohorts?.[c.entry] || { total: 0, subjects: {} };
@@ -113,7 +145,7 @@ export function buildIslandList(currentYear, data) {
     const tiles = [
       // 五甲教室有閱讀角，照真實教室做成剖面
       grade === 5
-        ? { name: '五甲教室・閱讀角', type: 'readingCorner', ground: 'lawn', desc: '五甲教室裡的閱讀角：巧拼地墊、一櫃子的書，還有大貓熊和大象陪著看書。' }
+        ? { name: '五甲教室・閱讀角', type: 'readingCorner', ground: 'lawn', desc: '五甲教室裡的閱讀角：巧拼地墊、一櫃子的書，還有大貓熊和大象陪著看書。', link: { cluster: 'reading', label: '到閱讀島看本月書展' } }
         : { name: `${GRADE_NAME[grade]}甲教室`, type: 'classroom', ground: 'lawn' },
       { name: '成果館', type: 'gallery', ground: 'stone', count: stats.total },
       ...subjects.map(([s, n]) => ({ name: s, type: SUBJECT_TYPE[s] || 'meadow', ground: 'lawn', count: n, subject: s })),
@@ -136,5 +168,5 @@ export function buildIslandList(currentYear, data) {
     return { ...f, kind: f.id, total: stats?.total, tiles };
   });
 
-  return [fixed[0], ...classes, fixed[1], fixed[2]];
+  return [fixed[0], ...classes, fixed[1], fixed[2], readingIsland(FIXED[3], reading)];
 }

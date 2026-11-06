@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 import { HEX, TOP } from '../scene/kit.js';
 
-const KIND_CLASS = { hub: 'plate-hub', campus: 'plate-campus', class: 'plate-class' };
+const KIND_CLASS = { hub: 'plate-hub', campus: 'plate-campus', class: 'plate-class', reading: 'plate-reading' };
 
 export function createLabels(scene, clusters, onPick) {
   const plates = [];

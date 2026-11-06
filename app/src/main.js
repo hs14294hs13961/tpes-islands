@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/CSS2DRenderer.js';
 import { SCHOOL, buildIslandList } from './data/islands.js';
 import { loadData } from './data/records.js';
+import { loadReading, readingRecords } from './data/reading.js';
 import { buildWorld } from './scene/world.js';
 import { createEnv } from './scene/env.js';
 import { createPeople } from './scene/people.js';
@@ -37,8 +38,9 @@ controls.maxDistance = 380;
 controls.maxPolarAngle = 1.25;
 controls.screenSpacePanning = false;
 
-const data = await loadData();
-const islands = buildIslandList(data.currentYear, data);
+const [data, reading] = await Promise.all([loadData(), loadReading()]);
+reading.recordCount = readingRecords(data, reading).length;
+const islands = buildIslandList(data.currentYear, data, reading);
 const world = buildWorld(scene, islands);
 const env = createEnv(scene, { lamps: world.lamps, haloMat: world.haloMat, mobile });
 const people = createPeople(scene, world.clusters);
@@ -88,11 +90,16 @@ const labels = createLabels(scene, world.clusters, pick);
 let showNames = true;
 let paused = false;
 
-const residents = islands.reduce((n, c) => n + (c.people?.length || 0), 0);
+const residents = islands.reduce((n, c) => n + (c.people || []).filter((p) => !p.guest).length, 0);
 const hud = createHud({
   school: SCHOOL,
   data,
+  reading,
   residents,
+  onGo: (clusterId, tileIndex) => {
+    const cluster = world.clusters.find((c) => c.id === clusterId);
+    pick({ cluster, tile: tileIndex === undefined ? undefined : cluster.tiles[tileIndex] });
+  },
   onTime: (m) => env.setMode(m),
   onToggle: (key, on) => {
     if (key === 'names') showNames = on;

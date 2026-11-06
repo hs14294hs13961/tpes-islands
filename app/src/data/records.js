@@ -1,57 +1,9 @@
 // 成果資料：向電子書櫃的唯讀介面拿，存一份在瀏覽器；拿不到就用上次存的，再不行才用網站內建的備份。
 // 電子書櫃只負責回傳成果清單，班級島的統計都在這裡算，島的分配規則改動時不必重新部署學校端。
 import { SCHOOL } from './islands.js';
-
-const CACHE_KEY = 'tpes-islands-records-v1';
-const FRESH_MS = 5 * 60 * 1000;      // 5 分鐘內不重抓
-const USABLE_MS = 24 * 60 * 60 * 1000; // 一天內的舊資料先顯示，背景更新
-const TIMEOUT_MS = 6000;             // GAS 冷啟動較慢，但不能讓人等太久
+import { loadCached } from './remote.js';
 
 const GRADE = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
-
-function readCache() {
-  try {
-    return JSON.parse(localStorage.getItem(CACHE_KEY));
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(raw) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), raw }));
-  } catch { /* 無痕模式或空間不足：下次重抓就好 */ }
-}
-
-async function fetchLive() {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(SCHOOL.apiUrl, { signal: ctrl.signal });
-    const raw = await res.json();
-    if (!Array.isArray(raw.records)) throw new Error('資料格式不對');
-    writeCache(raw);
-    return raw;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function loadRaw() {
-  const cached = readCache();
-  const age = cached ? Date.now() - cached.at : Infinity;
-  if (age < USABLE_MS) {
-    if (age > FRESH_MS) fetchLive().catch(() => {}); // 先給舊的，下次進來就是新的
-    return cached.raw;
-  }
-  try {
-    return await fetchLive();
-  } catch {
-    if (cached) return cached.raw;
-    const res = await fetch('./src/data/demo.json');
-    return res.json();
-  }
-}
 
 /** 開啟成果時計一次瀏覽（寫進電子書櫃）。不等回應，失敗也不影響看成果。 */
 export function countView(id) {
@@ -108,7 +60,12 @@ export function summarize(raw) {
 }
 
 export async function loadData() {
-  return summarize(await loadRaw());
+  return summarize(await loadCached({
+    key: 'tpes-islands-records-v1',
+    url: SCHOOL.apiUrl,
+    fallback: './src/data/demo.json',
+    isValid: (raw) => Array.isArray(raw.records),
+  }));
 }
 
 /** 點島或點格子時要列出的成果。 */

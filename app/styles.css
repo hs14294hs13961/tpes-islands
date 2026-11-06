@@ -79,6 +79,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .plate-class { background: var(--primary); }
 .plate-hub { background: var(--accent); }
 .plate-campus { background: var(--leaf); }
+.plate-reading { background: #3f8f9e; }
 .plate-small { background: #9b8a7a; padding: 4px 12px; }
 .plate-small .plate-name { font-size: 13px; }
 
@@ -109,6 +110,48 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .info-card h2 { margin: 4px 0 6px; font-size: 24px; }
 .info-meta { margin: 0 0 10px; color: var(--accent); font-weight: 600; font-size: 14px; }
 .info-desc { margin: 0; line-height: 1.6; font-size: 14px; }
+
+/* ── 閱讀島 ── */
+.info-link { align-self: flex-start; margin-top: 10px; padding: 7px 12px; border: 0; border-radius: 10px; background: #3f8f9e; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
+.info-link[hidden] { display: none; }
+.info-card.reading { width: 380px; }
+.info-card.reading .info-desc:empty, .info-card.reading .info-meta:empty { display: none; }
+.read-panel { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; margin-top: 8px; }
+.read-panel[hidden] { display: none; }
+.read-month { display: flex; align-items: center; gap: 6px; padding: 4px; border-radius: 12px; background: rgba(63, 143, 158, .12); flex: none; }
+.read-month-title { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; min-width: 0; }
+.read-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.read-status { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.read-step { width: 34px; height: 34px; border: 0; border-radius: 9px; background: #fff; font-size: 20px; line-height: 1; cursor: pointer; flex: none; }
+.read-step:disabled { opacity: .35; cursor: default; }
+.read-body { display: flex; flex-direction: column; gap: 8px; margin: 10px -6px 0; padding: 0 6px 2px; overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
+.read-theme { margin: 0; font-size: 18px; }
+.read-dates { margin: 0; font-size: 13px; font-weight: 600; color: var(--accent); }
+.read-blurb { margin: 0 0 4px; font-size: 14px; line-height: 1.6; }
+.read-sub { margin: 6px 0 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+.read-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.read-empty { margin: 8px 0; font-size: 14px; color: var(--muted); }
+.read-chips { display: flex; flex-wrap: wrap; gap: 5px; flex: none; }
+.read-chip { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 12px; cursor: pointer; }
+.read-chip.on { background: #3f8f9e; border-color: #3f8f9e; color: #fff; }
+.read-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: left; font: inherit; color: inherit; flex: none; }
+button.read-row { cursor: pointer; }
+button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; outline: none; }
+.read-row-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.read-row-title { font-size: 14px; font-weight: 600; line-height: 1.35; }
+.read-row-meta { font-size: 12px; color: var(--muted); }
+.read-go { font-size: 18px; color: var(--muted); flex: none; }
+.read-tag { padding: 2px 8px; border-radius: 999px; background: var(--line); font-size: 11px; font-weight: 600; white-space: nowrap; flex: none; }
+.read-tag.must { background: var(--accent); color: #fff; }
+.read-card { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--line); flex: none; }
+.read-card-tag { font-size: 12px; font-weight: 700; color: #3f8f9e; }
+.read-card-text { font-size: 14px; line-height: 1.55; }
+.read-families { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; }
+.read-family { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 8px; border-radius: 12px; background: #fff; border: 1px solid var(--line); text-align: center; font-size: 14px; }
+.read-family-pic { width: 64px; height: 64px; border-radius: 50%; border: 3px solid; object-fit: cover; }
+.read-family-slogan { font-size: 12px; line-height: 1.45; color: var(--muted, #6b6570); }
+.read-event { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--line); flex: none; }
+.read-event-date { min-width: 44px; font-size: 13px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
 
 /* ── 成果卡片 ── */
 .rec-list { display: flex; flex-direction: column; gap: 8px; margin: 12px -6px 0; padding: 0 6px 2px; overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
@@ -183,6 +226,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .seg button { padding: 6px 8px; font-size: 12px; }
   .butler { order: -1; width: 100%; max-width: none; margin: 0; }
   .info-card { top: auto; bottom: 104px; left: 8px; right: 8px; width: auto; transform: translateY(140%); max-height: calc(100dvh - 254px); }
+  .info-card.reading { width: auto; }
   body:has(.info-card.open) .butler { display: none; } /* 看成果時先收起訊息框，免得蓋住清單 */
   .viewer { padding: 0; }
   .viewer-box { width: 100%; height: 100%; border-radius: 0; }

@@ -1,0 +1,737 @@
+{
+  "source": "builtin",
+  "months": [
+    {
+      "id": "115-1-09",
+      "term": "115-1",
+      "month": 9,
+      "sdg": 11,
+      "theme": "永續城鄉 × 防災教育",
+      "start": "2026-09-09",
+      "end": "2026-09-30",
+      "color": "#FD9D24",
+      "blurb": "開學第一個月遇上九二一國家防災日，一起讀地震、颱風、火災與避難的書，學會保護自己，也想想怎麼讓社區更安全。",
+      "links": {},
+      "extras": [],
+      "books": [
+        {
+          "title": "災難來了，我有準備！",
+          "publisher": "親子天下",
+          "required": true,
+          "level": "一年級",
+          "grades": [
+            1
+          ]
+        },
+        {
+          "title": "啊！地震來了！",
+          "publisher": "五南圖書出版",
+          "required": true,
+          "level": "二年級",
+          "grades": [
+            2
+          ]
+        },
+        {
+          "title": "颱風來的日子",
+          "publisher": "五南圖書出版",
+          "required": true,
+          "level": "三年級",
+          "grades": [
+            3
+          ]
+        },
+        {
+          "title": "我不怕！小學生的防災和避難繪本",
+          "publisher": "臺灣麥克",
+          "required": true,
+          "level": "四年級",
+          "grades": [
+            4
+          ]
+        },
+        {
+          "title": "我們的家失火了",
+          "publisher": "維京出版",
+          "required": true,
+          "level": "五年級",
+          "grades": [
+            5
+          ]
+        },
+        {
+          "title": "地震跑跑跑！？",
+          "publisher": "野人文化",
+          "required": true,
+          "level": "六年級",
+          "grades": [
+            6
+          ]
+        },
+        {
+          "title": "福島來的孩子",
+          "publisher": "玉山社",
+          "required": false,
+          "level": "",
+          "grades": []
+        },
+        {
+          "title": "失火了！快逃",
+          "publisher": "五南圖書出版",
+          "required": false,
+          "level": "",
+          "grades": []
+        },
+        {
+          "title": "SDGs 就在你身邊 1：家庭實踐篇",
+          "publisher": "親子天下",
+          "required": false,
+          "level": "",
+          "grades": []
+        },
+        {
+          "title": "SDGs 就在你身邊 2：社區實踐篇",
+          "publisher": "親子天下",
+          "required": false,
+          "level": "",
+          "grades": []
+        },
+        {
+          "title": "SDGs 就在你身邊 3：學校實踐篇",
+          "publisher": "親子天下",
+          "required": false,
+          "level": "",
+          "grades": []
+        },
+        {
+          "title": "漫畫小學生自我保護：旅遊與災害安全",
+          "publisher": "雙美生活文創",
+          "required": false,
+          "level": "",
+          "grades": []
+        },
+        {
+          "title": "SDGs 系列講堂：1 天 1 項環保挑戰，與孩子一起打造永續地球",
+          "publisher": "台灣東販",
+          "required": false,
+          "level": "",
+          "grades": []
+        }
+      ],
+      "questions": [
+        {
+          "grade": 1,
+          "no": 1,
+          "text": "找一找書裡的圖畫，當地震搖晃時，小朋友躲在桌子底下做了什麼動作來保護自己？"
+        },
+        {
+          "grade": 1,
+          "no": 2,
+          "text": "如果現在你要幫忙準備一個「緊急避難包」，你覺得哪一樣東西最重要、一定要帶？為什麼？"
+        },
+        {
+          "grade": 2,
+          "no": 1,
+          "text": "當地震發生、地面開始搖晃時，主角做了哪三個保命動作？為什麼要抓住桌腳不放開呢？"
+        },
+        {
+          "grade": 2,
+          "no": 2,
+          "text": "如果地震發生時，你正好在學校走廊上，周圍沒有大桌子可以躲，你會怎麼保護自己？"
+        },
+        {
+          "grade": 3,
+          "no": 1,
+          "text": "在颱風登陸前，全家人分工進行了哪些準備工作？在過程中，可以看出大家面對天災抱持著什麼樣的態度？"
+        },
+        {
+          "grade": 3,
+          "no": 2,
+          "text": "如果放學走路回家時突然遇到大雷雨，周圍有「高大的大樹下」和「有屋頂的騎樓／商店內」，你會選擇去哪裡避雨？為什麼？"
+        },
+        {
+          "grade": 4,
+          "no": 1,
+          "text": "當災害發生時，如果「家人剛好不在身邊」，有哪些保護自己以及和家人取得聯繫的好方法？"
+        },
+        {
+          "grade": 4,
+          "no": 2,
+          "text": "如果放學走路回家時突然遇到大雷雨，周圍有「高大的大樹下」和「有屋頂的騎樓／商店內」，你會選擇去哪裡避雨？為什麼？"
+        },
+        {
+          "grade": 5,
+          "no": 1,
+          "text": "葛莉塔為什麼把地球的危機比喻成「我們的家失火了」？她想提醒大家什麼？"
+        },
+        {
+          "grade": 5,
+          "no": 2,
+          "text": "有人說：「我們只是小學生，沒辦法改變地球暖化。」你贊成這句話嗎？請寫出你的想法，並舉出一件你在生活中可以做到的行動。"
+        },
+        {
+          "grade": 6,
+          "no": 1,
+          "text": "書名《地震跑跑跑！？》，作者真正想提醒我們在地震發生當下，應該先做什麼？為什麼不能慌張亂跑？"
+        },
+        {
+          "grade": 6,
+          "no": 2,
+          "text": "颱風來臨前通常可以預報和準備，但地震卻很難提前準確預測。請說明為什麼地震總是來得無預警？"
+        }
+      ],
+      "articles": [],
+      "events": [
+        {
+          "date": "9/9",
+          "name": "主題書展開幕導讀",
+          "note": "介紹 SDGs 11 主題，逐一導讀六本必讀書"
+        },
+        {
+          "date": "9/21",
+          "name": "志工媽媽晨間說故事",
+          "note": "低年級在圖書館聽故事、玩接力賽"
+        },
+        {
+          "date": "9/29",
+          "name": "書展總結",
+          "note": "問題卡分享與摸彩"
+        }
+      ]
+    },
+    {
+      "id": "115-1-10",
+      "term": "115-1",
+      "month": 10,
+      "sdg": 5,
+      "theme": "性別平等",
+      "start": "2026-10-07",
+      "end": "2026-10-30",
+      "color": "#FF3A21",
+      "blurb": "從 10/11 國際女孩日出發，讀見每一種樣子，讓每個人都能安心做自己。",
+      "links": {},
+      "extras": [
+        {
+          "name": "國際女孩日介紹影片",
+          "url": "https://www.youtube.com/watch?v=wYH_0fD4dac"
+        }
+      ],
+      "books": [
+        {
+          "title": "我的身體哪裡最重要",
+          "publisher": "三采文化",
+          "required": true,
+          "level": "一年級",
+          "grades": [
+            1
+          ]
+        },
+        {
+          "title": "粉紅色影子的男孩",
+          "publisher": "上誼文化",
+          "required": true,
+          "level": "二年級",
+          "grades": [
+            2
+          ]
+        },
+        {
+          "title": "我的第一本性別平等小書（女生版）",
+          "publisher": "字畝文化",
+          "required": true,
+          "level": "三年級",
+          "grades": [
+            3
+          ]
+        },
+        {
+          "title": "我的第一本性別平等小書（男生版）",
+          "publisher": "字畝文化",
+          "required": true,
+          "level": "三年級",
+          "grades": [
+            3
+          ]
+        },
+        {
+          "title": "瑪麗愛穿什麼就穿什麼",
+          "publisher": "聯經出版",
+          "required": true,
+          "level": "四年級",
+          "grades": [
+            4
+          ]
+        },
+        {
+          "title": "馬拉拉的上學路",
+          "publisher": "韋伯文化",
+          "required": true,
+          "level": "五年級",
+          "grades": [
+            5
+          ]
+        },
+        {
+          "title": "蝴蝶朵朵",
+          "publisher": "字畝文化",
+          "required": true,
+          "level": "六年級",
+          "grades": [
+            6
+          ]
+        },
+        {
+          "title": "我不喜歡你摸我",
+          "publisher": "京采文教",
+          "required": false,
+          "level": "中年級",
+          "grades": [
+            3,
+            4
+          ]
+        },
+        {
+          "title": "親愛的奶爸",
+          "publisher": "小魯文化",
+          "required": false,
+          "level": "中年級",
+          "grades": [
+            3,
+            4
+          ]
+        },
+        {
+          "title": "兒童法律小學堂：不要碰我",
+          "publisher": "新苗文化",
+          "required": false,
+          "level": "高年級",
+          "grades": [
+            5,
+            6
+          ]
+        },
+        {
+          "title": "揭開青春期的 20 個秘密",
+          "publisher": "双美生活文創",
+          "required": false,
+          "level": "高年級",
+          "grades": [
+            5,
+            6
+          ]
+        },
+        {
+          "title": "有男生❤️女生",
+          "publisher": "小兵出版",
+          "required": false,
+          "level": "高年級",
+          "grades": [
+            5,
+            6
+          ]
+        },
+        {
+          "title": "歡迎你的月經好朋友！",
+          "publisher": "水滴文化",
+          "required": false,
+          "level": "中／高年級",
+          "grades": [
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "grade": 1,
+          "no": 1,
+          "text": "如果有人亂觸碰你，讓你不舒服，你要怎麼做？"
+        },
+        {
+          "grade": 1,
+          "no": 2,
+          "text": "你覺得你身體的「哪裡」最重要？說說看你的原因。"
+        },
+        {
+          "grade": 2,
+          "no": 1,
+          "text": "小男孩穿裙子去上學，為什麼哭著跑回家？"
+        },
+        {
+          "grade": 2,
+          "no": 2,
+          "text": "爸爸最後為什麼也穿上粉紅色的裙子？"
+        },
+        {
+          "grade": 3,
+          "no": 1,
+          "text": "有人說「力氣大就是最厲害」，你同意嗎？分享你的想法吧！"
+        },
+        {
+          "grade": 3,
+          "no": 2,
+          "text": "「男生可以哭」和「女生可以當領袖」，這兩句話你覺得作者都想告訴我們什麼？"
+        },
+        {
+          "grade": 4,
+          "no": 1,
+          "text": "瑪麗的爸爸說：「有時候，人們會對自己不了解的事感到害怕。」這句話讓瑪麗明白了什麼？"
+        },
+        {
+          "grade": 4,
+          "no": 2,
+          "text": "你覺得瑪麗勇敢嗎？請分享你的理由。"
+        },
+        {
+          "grade": 5,
+          "no": 1,
+          "text": "馬拉拉上學的情況，和我們有什麼不同？"
+        },
+        {
+          "grade": 5,
+          "no": 2,
+          "text": "想想看，作者為什麼要寫馬拉拉的故事給小朋友看呢？"
+        },
+        {
+          "grade": 6,
+          "no": 1,
+          "text": "書中常常偷偷出現狐狸，你覺得狐狸代表著什麼？"
+        },
+        {
+          "grade": 6,
+          "no": 2,
+          "text": "你會推薦這本書給其他同學看嗎？為什麼？跟大家分享你的推薦理由！"
+        }
+      ],
+      "articles": [
+        {
+          "title": "每一個人，都有不同的樣子！",
+          "issue": 85,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20260855180214089"
+        },
+        {
+          "title": "換我上臺了！",
+          "issue": 7,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/1871899269393420288"
+        },
+        {
+          "title": "用放射線照亮世界的瑪里．居禮與科學姐妹的故事",
+          "issue": 49,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20250496074719193"
+        },
+        {
+          "title": "沒有我的同意，別碰我的身體呀！",
+          "issue": 20,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20250208584024844"
+        },
+        {
+          "title": "被迫長大的孩子：伊拉克通過 9 歲童婚法案",
+          "issue": 23,
+          "column": "學習啓航館—社會探尋",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20250237088696281"
+        },
+        {
+          "title": "走進克拉拉．舒曼與《夢幻曲》的世界",
+          "issue": 71,
+          "column": "創思研究院—動手動腳",
+          "stars": 2,
+          "url": "https://articles.newsy365.com/Sharer/20260719710480952"
+        }
+      ],
+      "events": [
+        {
+          "date": "10/7",
+          "name": "主題書展開幕",
+          "note": "四大家族 Wayground 搶答，混齡一起思考"
+        },
+        {
+          "date": "10/15",
+          "name": "故事媽媽到校",
+          "note": "昇恆昌故事媽媽說故事，閱讀結合手作與律動"
+        },
+        {
+          "date": "10/19",
+          "name": "志工媽媽說故事",
+          "note": "低年級在圖書館席地共讀繪本"
+        },
+        {
+          "date": "10/30",
+          "name": "主題書展閉幕",
+          "note": "Hi-teach 挑戰賽、問題卡抽獎、上台分享心得"
+        }
+      ]
+    },
+    {
+      "id": "115-1-11",
+      "term": "115-1",
+      "month": 11,
+      "sdg": 10,
+      "theme": "消弭不平等",
+      "start": "2026-11-06",
+      "end": "2026-11-25",
+      "color": "#DD1367",
+      "blurb": "不論年齡、性別、身心障礙、種族或經濟條件，每個人都應該有同樣的機會。這個月一起想想：什麼才是真正的公平？",
+      "links": {},
+      "extras": [
+        {
+          "name": "世界人權日教材包",
+          "url": "https://cirn.k12ea.gov.tw/web1126/List.aspx?fid=6705"
+        }
+      ],
+      "books": [
+        {
+          "title": "我也想當警察：增強自我信心",
+          "publisher": "京采文教",
+          "required": true,
+          "level": "一年級",
+          "grades": [
+            1
+          ]
+        },
+        {
+          "title": "媽媽的紅沙發",
+          "publisher": "三之三",
+          "required": true,
+          "level": "二年級",
+          "grades": [
+            2
+          ]
+        },
+        {
+          "title": "大象男孩與機器女孩",
+          "publisher": "格林文化",
+          "required": true,
+          "level": "三年級",
+          "grades": [
+            3
+          ]
+        },
+        {
+          "title": "街道是大家的",
+          "publisher": "遠流",
+          "required": true,
+          "level": "四年級",
+          "grades": [
+            4
+          ]
+        },
+        {
+          "title": "公平？不公平？教你獨立思考，如何判斷！",
+          "publisher": "東雨文化",
+          "required": true,
+          "level": "五年級",
+          "grades": [
+            5
+          ]
+        },
+        {
+          "title": "世界的孩子上學去：全球學生的真實歷險記",
+          "publisher": "聯經",
+          "required": true,
+          "level": "六年級",
+          "grades": [
+            6
+          ]
+        },
+        {
+          "title": "明天換我決定",
+          "publisher": "格林文化",
+          "required": false,
+          "level": "低年級",
+          "grades": [
+            1,
+            2
+          ]
+        },
+        {
+          "title": "我選我自己：不會寫字的獅子又來了！",
+          "publisher": "米奇巴克",
+          "required": false,
+          "level": "中年級",
+          "grades": [
+            3,
+            4
+          ]
+        },
+        {
+          "title": "天空與我：女性飛行員先驅貝維莉・巴斯機長",
+          "publisher": "維京",
+          "required": false,
+          "level": "中高年級",
+          "grades": [
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "title": "你要說什麼？",
+          "publisher": "親子天下",
+          "required": false,
+          "level": "高年級",
+          "grades": [
+            5,
+            6
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "grade": 1,
+          "no": 1,
+          "text": "主角明明想當警察，為什麼每次都答應強強的要求？"
+        },
+        {
+          "grade": 1,
+          "no": 2,
+          "text": "主角後來做了什麼事，讓大家知道他也想當警察？"
+        },
+        {
+          "grade": 2,
+          "no": 1,
+          "text": "為什麼小女孩一家人想存錢買一張沙發？"
+        },
+        {
+          "grade": 2,
+          "no": 2,
+          "text": "如果你要和家人共同存錢買一樣物品，你想買什麼？為什麼？"
+        },
+        {
+          "grade": 3,
+          "no": 1,
+          "text": "書名把祥祥叫做「大象男孩」，把珊珊叫做「機器女孩」。說說他們為什麼會被這樣稱呼？"
+        },
+        {
+          "grade": 3,
+          "no": 2,
+          "text": "祥祥和珊珊能一步步面對困難，身邊的人給了他們哪些幫助？這些幫助有什麼共同的地方？"
+        },
+        {
+          "grade": 4,
+          "no": 1,
+          "text": "孩子們為了爭取遊戲空地，做了哪些事情？請依照順序說明。"
+        },
+        {
+          "grade": 4,
+          "no": 2,
+          "text": "書名「街道是大家的」。你同意嗎？請用書中的內容，說說你的理由。"
+        },
+        {
+          "grade": 5,
+          "no": 1,
+          "text": "所謂「站在別人的角度」看事情。請從書中選一個例子，說明換個角度想之後，大家對「公不公平」的看法有什麼改變。"
+        },
+        {
+          "grade": 5,
+          "no": 2,
+          "text": "班上用「少數服從多數」來決定事情，一定公平嗎？如果要讓結果更公平，你會怎麼調整？請說明理由。"
+        },
+        {
+          "grade": 6,
+          "no": 1,
+          "text": "請你分享書裡一個國家的上學故事，也可以分享那個國家的文化小知識喔！"
+        },
+        {
+          "grade": 6,
+          "no": 2,
+          "text": "選出書中兩個國家，比較那裡的孩子上學的方式有什麼不同，並說說造成不同的原因。"
+        }
+      ],
+      "articles": [
+        {
+          "title": "每一個人，都有不同的樣子！",
+          "issue": 85,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20260855180214089"
+        },
+        {
+          "title": "讓理解成為平等的度量！",
+          "issue": 67,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20260678529334585"
+        },
+        {
+          "title": "咦？什麼才重要？",
+          "issue": 56,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20260568434761439"
+        },
+        {
+          "title": "大家都認為公平，但是，我覺得……",
+          "issue": 36,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20250368699974092"
+        },
+        {
+          "title": "每一個與眾不同的身體都很酷！",
+          "issue": 23,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20250237382202594"
+        },
+        {
+          "title": "不只是「你」，每一個人都應該有平等的機會！",
+          "issue": 13,
+          "column": "創思研究院—SDGs 永續任務",
+          "stars": 3,
+          "url": "https://articles.newsy365.com/Sharer/20250131715818223"
+        }
+      ],
+      "events": [
+        {
+          "date": "11/6",
+          "name": "主題書展開幕",
+          "note": "以家族形式進行 Wayground 遊戲"
+        },
+        {
+          "date": "11/20",
+          "name": "世界兒童人權日",
+          "note": "認識孩子的權利"
+        },
+        {
+          "date": "11/25",
+          "name": "主題書展閉幕",
+          "note": "問題卡摸彩、心得分享、Hi-teach 挑戰賽"
+        }
+      ]
+    }
+  ],
+  "worksheets": [
+    {
+      "name": "閱讀心得單（一年級）",
+      "level": "一年級",
+      "url": ""
+    },
+    {
+      "name": "閱讀心得單（二年級）",
+      "level": "二年級",
+      "url": ""
+    },
+    {
+      "name": "閱讀心得單（中年級）",
+      "level": "三、四年級",
+      "url": ""
+    },
+    {
+      "name": "閱讀心得單（高年級）",
+      "level": "五、六年級",
+      "url": ""
+    }
+  ]
+}
