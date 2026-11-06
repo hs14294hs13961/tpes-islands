@@ -7,11 +7,15 @@ const CACHE_KEY = 'reading-v1';
 const CACHE_SECONDS = 300; // 老師改完表最慢 5 分鐘生效
 const DEFAULT_COLOR = '#7d62b8';
 
+const UPLOAD_URL = 'https://hs14294hs13961.github.io/tpes-islands/upload.html';
+
 function doGet(e) {
-  if (e && e.parameter && e.parameter.page === 'upload') {
-    return HtmlService.createHtmlOutput(UPLOAD_PAGE)
-      .setTitle('閱讀島資料上傳')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  // 網站讀資料走 ?api=reading；人直接打開這個網址時給一句說明，不要看到一大片資料
+  if (!e || !e.parameter || e.parameter.api !== 'reading') {
+    return HtmlService.createHtmlOutput(
+      '<meta charset="utf-8"><p style="font:16px sans-serif;padding:24px">這個網址是給閱讀島讀資料用的。'
+      + `要上傳檔案請到 <a href="${UPLOAD_URL}" target="_top">閱讀島資料上傳</a>。</p>`
+    ).setTitle('閱讀島介面');
   }
   const cache = CacheService.getScriptCache();
   let json = cache.get(CACHE_KEY);
@@ -19,9 +23,25 @@ function doGet(e) {
     json = JSON.stringify(buildReading_(SpreadsheetApp.getActiveSpreadsheet()));
     try {
       cache.put(CACHE_KEY, json, CACHE_SECONDS);
-    } catch (e) { /* 超過快取上限（100 KB）：不快取，每次重讀就好 */ }
+    } catch (err) { /* 超過快取上限（100 KB）：不快取，每次重讀就好 */ }
   }
-  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+  return jsonOutput_(json);
+}
+
+function jsonOutput_(text) {
+  return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.JSON);
+}
+
+/** 上傳頁（網站的 upload.html）傳來的動作。用 text/plain 送 JSON，瀏覽器才不會先做跨網域預檢。 */
+function doPost(e) {
+  try {
+    const req = JSON.parse(e.postData.contents);
+    checkCode_(req.code);
+    const result = req.action === 'info' ? uploadInfo_() : uploadFile_(req.file);
+    return jsonOutput_(JSON.stringify({ ok: true, ...result }));
+  } catch (err) {
+    return jsonOutput_(JSON.stringify({ ok: false, error: err.message }));
+  }
 }
 
 /** 把一個分頁讀成物件陣列，以第 1 列的欄名為鍵；全空的列略過。分頁不存在就回空陣列。 */
@@ -147,9 +167,9 @@ function buildReading_(ss) {
   };
 }
 
-// ─── 上傳頁（網址加 ?page=upload）───────────────────────────────
+// ─── 上傳（頁面在網站的 upload.html）────────────────────────────
 // 檔案存到試算表所在資料夾底下的「學習單」或「115-1/11_SDG10」，開成知道連結可檢視，連結自動填回內容表。
-// 網頁應用程式是公開的，所以每個動作都要驗證上傳密碼（指令碼屬性 UPLOAD_CODE，不寫在程式裡）。
+// 網頁應用程式是公開的，所以每個動作都先驗證上傳密碼（指令碼屬性 UPLOAD_CODE，不寫在程式裡）。
 
 const MAX_UPLOAD_MB = 35; // Apps Script 單次傳輸上限約 50 MB，base64 會膨脹三分之一
 const MONTH_COLUMNS = { trifold: '三折頁連結', booklist: '書單連結', report: '月報連結', slides: '簡報連結' };
@@ -166,9 +186,8 @@ function checkCode_(code) {
   }
 }
 
-/** 登入：驗證密碼，回傳可選的主題月。 */
-function uploadInfo(code) {
-  checkCode_(code);
+/** 登入：回傳可選的主題月。 */
+function uploadInfo_() {
   const months = buildReading_(SpreadsheetApp.getActiveSpreadsheet()).months
     .sort((a, b) => (a.start < b.start ? -1 : 1))
     .map((m) => ({ term: m.term, month: m.month, label: `${m.term}・${m.month} 月・SDG ${m.sdg}` }));
@@ -226,8 +245,7 @@ function writeLink_(ss, kind, month, name, url) {
 }
 
 /** 收一個檔案：f = { name, mimeType, base64, kind, term, month }。 */
-function uploadFile(code, f) {
-  checkCode_(code);
+function uploadFile_(f) {
   const name = String(f.name || '').trim();
   if (!/\.(pdf|docx?|pptx?|jpe?g|png)$/i.test(name)) throw new Error('只收 PDF、Word、PowerPoint、JPG、PNG');
   if (f.kind !== 'worksheet' && f.kind !== 'extra' && !MONTH_COLUMNS[f.kind]) throw new Error('沒有這個種類');
@@ -255,162 +273,3 @@ function uploadFile(code, f) {
     lock.releaseLock();
   }
 }
-
-const UPLOAD_PAGE = `<!doctype html>
-<meta charset="utf-8">
-<style>
-  body { margin: 0; padding: 20px 16px 40px; background: #f7f1e6; color: #2b201c; font: 15px/1.6 "PingFang TC","Noto Sans TC",sans-serif; }
-  main { max-width: 760px; margin: auto; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  p { margin: 4px 0 14px; color: #6f645d; }
-  input[type=password], select { font: inherit; padding: 8px 10px; border: 1px solid #d8cfc3; border-radius: 10px; background: #fff; }
-  button { font: inherit; font-weight: 700; padding: 9px 18px; border: 0; border-radius: 10px; background: #7d62b8; color: #fff; cursor: pointer; }
-  button:disabled { background: #c9c2d6; cursor: default; }
-  #drop { display: block; padding: 34px 16px; margin-bottom: 14px; text-align: center; border: 2px dashed #b9a7dd; border-radius: 14px; background: #fff; cursor: pointer; }
-  #drop.over { background: #efe9fa; }
-  .file { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 8px; align-items: center; padding: 10px 12px; margin-bottom: 8px; background: #fff; border-radius: 12px; }
-  .file .name { word-break: break-all; font-weight: 600; }
-  .file .msg { grid-column: 1 / -1; font-size: 13px; color: #6f645d; }
-  .file .msg.warn { color: #c0392b; font-weight: 600; }
-  .file .msg.ok { color: #2f7d3a; font-weight: 600; }
-  .confirm { display: block; margin: 14px 0; padding: 10px 12px; background: #fdf1d6; border-radius: 10px; }
-  #error { color: #c0392b; font-weight: 600; }
-  @media (max-width: 560px) { .file { grid-template-columns: 1fr 1fr; } .file .name { grid-column: 1 / -1; } }
-</style>
-<main>
-  <h1>閱讀島資料上傳</h1>
-  <p>把檔案全部拖進來，確認月份與種類後上傳。檔案會存進雲端資料夾，連結自動填進內容表。</p>
-  <form id="login">
-    <input id="code" type="password" placeholder="上傳密碼" autocomplete="current-password" aria-label="上傳密碼">
-    <button>進入</button>
-  </form>
-  <p id="error" role="alert"></p>
-  <section id="work" hidden>
-    <label id="drop">把檔案拖到這裡，或點一下選檔（可一次選很多個）
-      <input id="pick" type="file" multiple hidden>
-    </label>
-    <div id="list"></div>
-    <div id="actions" hidden>
-      <label class="confirm"><input id="ok" type="checkbox"> 我確認這些檔案<b>沒有學生姓名、學生照片、問題卡答案</b>。上傳後知道連結的人都能看。</label>
-      <button id="send" disabled>開始上傳</button>
-      <p id="done" role="status"></p>
-    </div>
-  </section>
-</main>
-<script>
-var KINDS = [['booklist','書單'],['trifold','三折頁'],['report','月報'],['slides','開閉幕簡報'],['worksheet','學習單'],['extra','延伸資源'],['skip','不上傳']];
-var code = '', months = [], maxMb = 35, items = [];
-var $ = function (id) { return document.getElementById(id); };
-
-function call(fn) {
-  var args = [].slice.call(arguments, 1);
-  return new Promise(function (ok, fail) {
-    var r = google.script.run.withSuccessHandler(ok).withFailureHandler(fail);
-    r[fn].apply(r, args);
-  });
-}
-function guess(n) {
-  if (!/[.](pdf|docx?|pptx?|jpe?g|png)$/i.test(n)) return { kind: 'skip', warn: '這種檔案不能上傳' };
-  if (/答案|編號|全校成果|提問方向|姓名|名單/.test(n)) return { kind: 'skip', warn: '可能有學生資料或答案，預設不上傳。確認沒問題再改種類。' };
-  if (/得報/.test(n)) return { kind: 'skip', note: '得報文章放連結就好，不放檔案。' };
-  if (/問題卡/.test(n)) return { kind: 'skip', note: '問題卡題目已在內容表，不用上傳。' };
-  if (/心得單|學習單/.test(n)) return { kind: 'worksheet' };
-  if (/抽獎|開幕|閉幕|簡報/.test(n)) return { kind: 'slides', note: '上傳前請確認簡報裡沒有學生正面照。' };
-  if (/書目|書單/.test(n)) return { kind: 'booklist' };
-  if (/三折頁|主題書展\\s*SDG/i.test(n)) return { kind: 'trifold' };
-  if (/月報/.test(n)) return { kind: 'report', note: '上傳前請確認月報裡沒有學生正面照與全名。' };
-  return { kind: 'extra' };
-}
-function guessMonth(n) {
-  var m = n.match(/(\\d{1,2})\\s*月/);
-  var hit = -1;
-  if (m) months.forEach(function (x, i) { if (x.month === Number(m[1])) hit = i; });
-  return hit >= 0 ? hit : months.length - 1;
-}
-function select(options, value) {
-  var s = document.createElement('select');
-  options.forEach(function (o) {
-    var e = document.createElement('option');
-    e.value = o[0]; e.textContent = o[1];
-    s.append(e);
-  });
-  s.value = String(value);
-  return s;
-}
-function refresh() {
-  var any = items.some(function (i) { return i.kind.value !== 'skip' && !i.done; });
-  $('actions').hidden = !items.length;
-  $('send').disabled = !any || !$('ok').checked;
-}
-function add(files) {
-  [].forEach.call(files, function (file) {
-    var g = guess(file.name);
-    var row = document.createElement('div');
-    row.className = 'file';
-    var name = document.createElement('span');
-    name.className = 'name';
-    name.textContent = file.name;
-    var month = select(months.map(function (m, i) { return [i, m.label]; }), guessMonth(file.name));
-    var kind = select(KINDS, g.kind);
-    var msg = document.createElement('span');
-    var big = file.size > maxMb * 1048576;
-    if (big) kind.value = 'skip';
-    msg.className = 'msg' + (g.warn || big ? ' warn' : '');
-    msg.textContent = big ? '超過 ' + maxMb + ' MB，傳不上去，請先壓縮。' : (g.warn || g.note || '');
-    var syncMonth = function () { month.disabled = kind.value === 'worksheet' || kind.value === 'skip'; refresh(); };
-    kind.addEventListener('change', syncMonth);
-    row.append(name, month, kind, msg);
-    $('list').append(row);
-    items.push({ file: file, month: month, kind: kind, msg: msg, done: false });
-    syncMonth();
-  });
-  refresh();
-}
-function base64(file) {
-  return new Promise(function (ok, fail) {
-    var r = new FileReader();
-    r.onload = function () { ok(String(r.result).split(',')[1]); };
-    r.onerror = fail;
-    r.readAsDataURL(file);
-  });
-}
-$('login').addEventListener('submit', function (e) {
-  e.preventDefault();
-  $('error').textContent = '';
-  code = $('code').value;
-  call('uploadInfo', code).then(function (info) {
-    months = info.months; maxMb = info.maxMb;
-    $('login').hidden = true;
-    $('work').hidden = false;
-  }).catch(function (err) { $('error').textContent = err.message; });
-});
-$('pick').addEventListener('change', function () { add(this.files); this.value = ''; });
-var drop = $('drop');
-['dragover', 'dragenter'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
-['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
-drop.addEventListener('drop', function (e) { add(e.dataTransfer.files); });
-$('ok').addEventListener('change', refresh);
-$('send').addEventListener('click', async function () {
-  var todo = items.filter(function (i) { return i.kind.value !== 'skip' && !i.done; });
-  $('send').disabled = true;
-  var fails = 0;
-  for (var n = 0; n < todo.length; n++) {
-    var it = todo[n], m = months[Number(it.month.value)] || {};
-    it.msg.className = 'msg';
-    it.msg.textContent = '上傳中…';
-    try {
-      var r = await call('uploadFile', code, { name: it.file.name, mimeType: it.file.type || 'application/octet-stream', base64: await base64(it.file), kind: it.kind.value, term: m.term, month: m.month });
-      it.done = true;
-      it.kind.disabled = it.month.disabled = true;
-      it.msg.className = 'msg ' + (r.warning ? 'warn' : 'ok');
-      it.msg.textContent = r.warning || '完成，連結已填入內容表';
-    } catch (err) {
-      fails++;
-      it.msg.className = 'msg warn';
-      it.msg.textContent = '失敗：' + err.message;
-    }
-  }
-  $('done').textContent = fails ? fails + ' 個失敗，可以再按一次重傳。' : '全部完成！閱讀島約 10 分鐘內會更新。';
-  refresh();
-});
-</script>`;

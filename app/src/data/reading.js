@@ -8,7 +8,7 @@ const taipeiToday = () => new Date(Date.now() + 8 * 36e5).toISOString().slice(0,
 export async function loadReading() {
   const raw = await loadCached({
     key: 'tpes-islands-reading-v1',
-    url: SCHOOL.readingApiUrl,
+    url: SCHOOL.readingApiUrl && `${SCHOOL.readingApiUrl}?api=reading`,
     fallback: './src/data/reading.json',
     isValid: (r) => Array.isArray(r.months) && r.months.length > 0,
   });
