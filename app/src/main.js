@@ -11,6 +11,9 @@ import { createPeople } from './scene/people.js';
 import { loadCharacters } from './scene/characters.js';
 import { createLabels } from './ui/labels.js';
 import { createHud } from './ui/hud.js';
+import { createDialog } from './ui/dialog.js';
+import { createGuide } from './ui/guide.js';
+import { createQChick } from './scene/qchick.js';
 import { GLOW } from './scene/kit.js';
 
 const mobile = matchMedia('(max-width: 760px)').matches;
@@ -82,6 +85,13 @@ function pick({ cluster, tile }) {
   if (tile) flyTo(tile.pos.clone().setY(1), mobile ? 50 : 38, 0.95);
   else flyTo(cluster.center.clone().setY(1), cluster.small ? 40 : cluster.radius * 3.2 + 20, 0.9);
   hud.showInfo({ cluster, tile });
+  guide.enterIsland(cluster);
+}
+
+// 導覽用：鏡頭飛到島上，但不打開資訊卡
+function focus(cluster) {
+  flyTo(cluster.center.clone().setY(1), cluster.small ? 40 : cluster.radius * 3.2 + 20, 0.9);
+  qchick.moveTo(cluster.center, cluster.radius);
 }
 
 // ── 介面 ─────────────────────────────────────────────
@@ -105,7 +115,8 @@ const hud = createHud({
     if (key === 'names') showNames = on;
     if (key === 'pause') paused = on;
   },
-  onHome: () => { birdOff(); goHome(); },
+  onHome: () => { birdOff(); qchick.leave(); goHome(); },
+  onButler: () => guide.menu(),
   onBird: (on) => {
     if (on) {
       controls.minPolarAngle = 0;
@@ -113,6 +124,10 @@ const hud = createHud({
     } else goHome();
   },
 });
+
+const qchick = createQChick(scene, { camera, controls });
+const dialog = createDialog({ onOpen: () => qchick.speak(true), onClose: () => qchick.speak(false) });
+const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.clusters, pick, focus, goHome });
 
 function birdOff() {
   document.getElementById('btn-bird').classList.remove('on');
@@ -127,6 +142,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
   ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
+  if (qchick.hit(ray)) { guide.menu(); return; }
   const hit = ray.intersectObjects(world.pickables, false)[0];
   if (!hit) return;
   const { cluster, tile } = hit.object.userData.pick;
@@ -171,6 +187,7 @@ renderer.setAnimationLoop(() => {
 
   env.update(dt, simTime);
   if (!paused) people.update(dt, simTime);
+  qchick.update(dt, clock.elapsedTime);
   for (const f of world.flames) f.scale.y = 1 + Math.sin(simTime * 12 + f.id) * 0.15;
   GLOW.fire.emissiveIntensity = 0.7 + Math.sin(simTime * 9) * 0.15;
   labels.update(camera, showNames, people.tags);
@@ -180,3 +197,4 @@ renderer.setAnimationLoop(() => {
 });
 
 hud.ready();
+guide.start();

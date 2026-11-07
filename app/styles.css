@@ -202,15 +202,40 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
 .live-rec { width: 7px; height: 7px; border-radius: 50%; background: #e5484d; }
 .clock { font-variant-numeric: tabular-nums; }
 
-.butler { margin-left: auto; display: flex; gap: 10px; align-items: center; padding: 10px 14px 10px 10px; max-width: 380px; }
+.butler { margin-left: auto; display: flex; gap: 10px; align-items: center; padding: 10px 14px 10px 10px; max-width: 380px; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: transform .2s; }
+.butler:hover { transform: translateY(-2px); }
+.butler.compact { padding: 6px; border-radius: 50%; }
+.butler.compact .butler-copy { display: none; }
 .butler-face {
   flex: none; width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
-  background: var(--paper); box-shadow: 0 0 0 2px var(--primary); transition: transform .2s;
+  background: var(--paper); box-shadow: 0 0 0 2px var(--primary);
 }
-.butler-face.pop { transform: scale(1.12) rotate(-4deg); }
-.butler-name { margin: 0; font-size: 11px; color: var(--primary); font-weight: 700; }
-.butler-text { margin: 2px 0 0; font-size: 13px; line-height: 1.45; opacity: 0; transition: opacity .25s; }
-.butler-text.show { opacity: 1; }
+.butler-copy { display: block; }
+.butler-name { display: block; font-size: 11px; color: var(--primary); font-weight: 700; }
+.butler-text { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; }
+
+/* ── 太平Q雞的對話框 ── */
+.q-dialog {
+  position: fixed; left: 50%; bottom: 76px; z-index: 20; transform: translateX(-50%);
+  width: min(600px, calc(100vw - 16px)); padding: 14px 16px; box-sizing: border-box;
+}
+.q-dialog[hidden] { display: none; }
+.q-dialog .close { position: absolute; top: 8px; right: 10px; }
+.q-line { display: flex; gap: 12px; align-items: flex-start; padding-right: 22px; }
+.q-face { flex: none; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--paper); box-shadow: 0 0 0 2px var(--primary); }
+.q-name { margin: 0; font-size: 12px; font-weight: 700; color: var(--primary); }
+.q-text { margin: 2px 0 0; min-height: 3em; font-size: 16px; line-height: 1.5; }
+.q-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.q-opt { min-height: 40px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+.q-opt:hover { background: var(--paper); }
+.q-opt.primary { border-color: transparent; background: var(--primary); color: #fff; font-weight: 700; }
+.q-opt.primary:hover { background: var(--primary); filter: brightness(1.08); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* 登島時 Q 雞在資訊卡上方說的話 */
+.info-q { display: flex; gap: 8px; align-items: center; margin: 0 22px 10px 0; padding: 7px 10px 7px 7px; border-radius: 12px; background: var(--paper); font-size: 13px; line-height: 1.45; }
+.info-q[hidden] { display: none; }
+.info-q img { flex: none; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 
 /* ── 手機 ── */
 @media (max-width: 760px) {
@@ -225,6 +250,12 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
   .bottom { flex-wrap: wrap; left: 8px; right: 8px; bottom: 8px; gap: 6px; }
   .seg button { padding: 6px 8px; font-size: 12px; }
   .butler { order: -1; width: 100%; max-width: none; margin: 0; }
+  .butler.compact { order: 3; width: auto; margin-left: auto; }
+  .butler-face { width: 44px; height: 44px; }
+  .q-dialog { bottom: 62px; }
+  .q-face { width: 52px; height: 52px; }
+  .q-text { font-size: 15px; }
+  body:has(.q-dialog:not([hidden])) .info-card { display: none; }
   .info-card { top: auto; bottom: 104px; left: 8px; right: 8px; width: auto; transform: translateY(140%); max-height: calc(100dvh - 254px); }
   .info-card.reading { width: auto; }
   body:has(.info-card.open) .butler { display: none; } /* 看成果時先收起訊息框，免得蓋住清單 */

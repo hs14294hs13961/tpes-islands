@@ -10,7 +10,7 @@ function rocDate(iso) {
   return `${y - 1911}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
 }
 
-export function createHud({ school, data, reading, residents, onGo, onTime, onToggle, onHome, onBird }) {
+export function createHud({ school, data, reading, residents, onGo, onTime, onToggle, onHome, onBird, onButler }) {
   $('brand-sub').textContent = data.source === 'demo'
     ? `備份資料・成果截至 ${rocDate(data.asOf)}`
     : `即時・${rocDate(data.asOf)} 更新`;
@@ -48,33 +48,18 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
     onBird(on);
   });
 
-  // 小管家太平Q雞：輪播最新上架的成果，三天內的新成果用驚訝臉
-  const fresh = (iso) => (new Date(data.asOf) - new Date(iso)) / 864e5 <= 3;
-  const lines = [
-    { face: 'wave', text: '歡迎來到太平群島！拖曳畫面轉一轉，點島名就能飛過去。' },
-    { face: 'think', text: '想看哪一班的作品？點島上的「成果館」試試看。' },
-    ...data.recent.map((r) => ({
-      face: fresh(r.date) ? 'wow' : 'happy',
-      text: `${r.cls}・${r.subject}：〈${r.title}〉上架了（${rocDate(r.date)}）`,
-    })),
-  ];
-  const faceEl = $('butler-face');
+  // 右下角的太平Q雞：只在打開頁面時說一句，之後收成頭像，點了才打開選單
   ['wave', 'happy', 'think', 'wow'].forEach((f) => { new Image().src = `./public/qchick/${f}.png`; });
-  let li = 0;
-  const say = () => {
-    const el = $('butler-text');
-    const line = lines[li++ % lines.length];
-    el.classList.remove('show');
-    setTimeout(() => {
-      el.textContent = line.text;
-      faceEl.src = `./public/qchick/${line.face}.png`;
-      faceEl.classList.add('pop');
-      setTimeout(() => faceEl.classList.remove('pop'), 220);
-      el.classList.add('show');
-    }, 250);
-  };
-  say();
-  setInterval(say, 7000);
+  let butlerTimer = null;
+  function butlerSay({ face, text }) {
+    const el = $('butler');
+    $('butler-face').src = `./public/qchick/${face}.png`;
+    $('butler-text').textContent = text;
+    el.classList.remove('compact');
+    clearTimeout(butlerTimer);
+    butlerTimer = setTimeout(() => el.classList.add('compact'), 12000);
+  }
+  $('butler').addEventListener('click', onButler);
 
   // 成果預覽：PDF、影片用 Drive／YouTube 內嵌，圖片直接顯示，外部連結另開分頁
   const TYPE_LABEL = { pdf: 'PDF', 圖片: '圖片', 影片: '影片', 音檔: '音檔', YouTube: '影片', 連結: '連結' };
@@ -185,7 +170,13 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
     recordCard,
     onGoTile: (index) => onGo('reading', index),
   });
+  function qNote({ face, text }) {
+    $('info-q-face').src = `./public/qchick/${face}.png`;
+    $('info-q-text').textContent = text;
+    $('info-q').hidden = false;
+  }
   function showInfo({ cluster, tile }) {
+    $('info-q').hidden = true;
     const isReading = cluster.id === 'reading';
     card.classList.toggle('reading', isReading);
     $('read-panel').hidden = !isReading;
@@ -228,5 +219,5 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
     $('loading').classList.add('done');
   }
 
-  return { showInfo, ready };
+  return { showInfo, ready, butlerSay, qNote, openRecord, closeInfo: () => card.classList.remove('open') };
 }

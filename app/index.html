@@ -47,6 +47,7 @@
 
   <aside class="card info-card" id="info-card" aria-live="polite">
     <button type="button" class="close" id="info-close" aria-label="關閉">×</button>
+    <p class="info-q" id="info-q" hidden><img id="info-q-face" alt="" aria-hidden="true"><span id="info-q-text"></span></p>
     <p class="info-island" id="info-island"></p>
     <h2 id="info-title"></h2>
     <p class="info-meta" id="info-meta"></p>
@@ -85,14 +86,27 @@
       <button type="button" data-toggle="pause">暫停</button>
       <button type="button" id="btn-bird">鳥瞰</button>
     </div>
-    <div class="card butler">
+    <button type="button" class="card butler compact" id="butler" aria-label="打開太平Q雞的選單">
       <img class="butler-face" id="butler-face" src="./public/qchick/wave.png" alt="" aria-hidden="true">
+      <span class="butler-copy">
+        <span class="butler-name">太平Q雞</span>
+        <span class="butler-text" id="butler-text"></span>
+      </span>
+    </button>
+  </footer>
+
+  <section class="card q-dialog" id="q-dialog" aria-label="太平Q雞的對話" hidden>
+    <button type="button" class="close" id="q-close" aria-label="關閉對話">×</button>
+    <div class="q-line" id="q-line">
+      <img class="q-face" id="q-face" src="./public/qchick/wave.png" alt="" aria-hidden="true">
       <div>
-        <p class="butler-name">太平Q雞</p>
-        <p class="butler-text" id="butler-text"></p>
+        <p class="q-name" id="q-name">太平Q雞</p>
+        <p class="q-text" id="q-text" aria-hidden="true"></p>
+        <p class="sr-only" id="q-live" role="status"></p>
       </div>
     </div>
-  </footer>
+    <div class="q-options" id="q-options"></div>
+  </section>
 
   <script type="module" src="./src/main.js"></script>
 </body>
