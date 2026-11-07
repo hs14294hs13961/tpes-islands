@@ -15,6 +15,15 @@ function read() {
 
 const state = read();
 
+// 3D 校園小遊戲（同網域另一個分頁）過關會直接寫彩蛋進來：重新讀一次，免得之後存檔把它蓋掉
+addEventListener('storage', (e) => {
+  if (e.key !== KEY) return;
+  const next = read();
+  state.slot = next.slot;
+  state.quiet = next.quiet;
+  state.slots = next.slots;
+});
+
 function write() {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));

@@ -2,6 +2,7 @@
 import { taipeiClock } from '../scene/env.js';
 import { recordsFor, countView } from '../data/records.js';
 import { createReadingPanel } from './readingPanel.js';
+import { createComments } from './comments.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -10,7 +11,7 @@ function rocDate(iso) {
   return `${y - 1911}/${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}`;
 }
 
-export function createHud({ school, data, reading, residents, onGo, onTime, onToggle, onHome, onBird, onButler }) {
+export function createHud({ school, data, reading, residents, onGo, onTime, onToggle, onHome, onBird, onButler, getSocial }) {
   $('brand-sub').textContent = data.source === 'demo'
     ? `備份資料・成果截至 ${rocDate(data.asOf)}`
     : `即時・${rocDate(data.asOf)} 更新`;
@@ -68,8 +69,10 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
   const viewer = $('viewer');
   const metaOf = (r) => `${rocDate(r.date)}・${r.className}・${r.subject}`;
 
+  const comments = createComments();
   function closeViewer() {
     viewer.hidden = true;
+    comments.hide();
     $('viewer-body').replaceChildren(); // 移除內嵌框，影片才會停
   }
   function openRecord(r) {
@@ -97,6 +100,7 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
       el.referrerPolicy = 'no-referrer';
     }
     $('viewer-body').replaceChildren(el);
+    comments.show(r);
     viewer.hidden = false;
   }
   // 閱讀島的文件：雲端硬碟、YouTube 在站內預覽，其他網站（得報、教材包）另開分頁
@@ -169,6 +173,7 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
     openDoc,
     recordCard,
     onGoTile: (index) => onGo('reading', index),
+    getSocial,
   });
   function qNote({ face, text }) {
     $('info-q-face').src = `./public/qchick/${face}.png`;
@@ -206,11 +211,11 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
     box.hidden = !list.length;
     $('info-more').hidden = !list.length;
     // 地標之間的捷徑：太平歲閱館、閱讀角都能直接到閱讀島
-    const link = tile?.link;
+    const link = tile?.link || (!tile && cluster.link);
     $('info-link').hidden = !link;
     if (link) {
-      $('info-link').textContent = `${link.label} ›`;
-      $('info-link').onclick = () => onGo(link.cluster);
+      $('info-link').textContent = link.map ? link.label : `${link.label} ›`;
+      $('info-link').onclick = () => (link.map ? window.open(school.mapUrl, '_blank', 'noopener') : onGo(link.cluster));
     }
     card.classList.add('open');
   }

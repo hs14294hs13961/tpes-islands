@@ -26,8 +26,12 @@ export function createDialog({ onOpen, onClose }) {
     onClose?.();
   }
 
-  /** 說一句話。options：[{ label, run }]，按了就關框再執行 run（run 可以接著說下一句）。 */
-  function say({ face, text, options = [], name = '太平Q雞', faceUrl, onDismiss }) {
+  /**
+   * 說一句話。options：[{ label, run, keep, disabled }]，按了就關框再執行 run（run 可以接著說下一句）；
+   * keep：按了不關框（送出表單時用）。extra：放在台詞下面的元素（例如寫心得的表單）。
+   * 回傳這次的按鈕，方便表單依內容啟用「送出」。
+   */
+  function say({ face, text, options = [], name = '太平Q雞', faceUrl, onDismiss, extra }) {
     finishTyping();
     full = text;
     closer = onDismiss || null;
@@ -35,25 +39,30 @@ export function createDialog({ onOpen, onClose }) {
     $('q-face').src = faceUrl || `./public/qchick/${face || 'happy'}.png`;
     live.textContent = text;
     const list = options.length ? options : [{ label: '好' }];
-    opts.replaceChildren(...list.map((o, i) => {
+    const buttons = list.map((o, i) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = i === 0 ? 'q-opt primary' : 'q-opt';
       b.textContent = o.label;
+      b.disabled = !!o.disabled;
       b.addEventListener('click', () => {
+        if (o.keep) { o.run?.(); return; }
         closer = null;
         hide();
         o.run?.();
       });
       return b;
-    }));
+    });
+    opts.replaceChildren(...buttons);
+    $('q-extra').replaceChildren(...(extra ? [extra] : []));
+    box.classList.toggle('wide', !!extra);
     if (box.hidden) {
       box.hidden = false;
       onOpen?.();
     }
     if (instant) {
       typed.textContent = text;
-      return;
+      return buttons;
     }
     let n = 0;
     typed.textContent = '';
@@ -62,6 +71,7 @@ export function createDialog({ onOpen, onClose }) {
       typed.textContent = chars.slice(0, ++n).join('');
       if (n >= chars.length) finishTyping();
     }, CHAR_MS);
+    return buttons;
   }
 
   function dismiss() {

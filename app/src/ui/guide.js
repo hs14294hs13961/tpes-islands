@@ -3,8 +3,9 @@ import { save, SLOT_COUNT } from '../data/save.js';
 import { recordsFor } from '../data/records.js';
 import { readingRecords } from '../data/reading.js';
 import { LINES, HELP, TOUR, islandIntro } from '../data/qchickLines.js';
+import { EGGS } from '../data/eggs.js';
 
-export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick, focus, goHome }) {
+export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick, focus, goHome, eggs }) {
   const byId = (id) => clusters.find((c) => c.id === id);
   const month = () => reading.months[reading.current];
   const countOf = (cluster) => (cluster.id === 'reading' ? readingRecords(data, reading) : recordsFor(data, { cluster })).length;
@@ -115,6 +116,7 @@ export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick
     say(LINES.menu, [
       { label: '看孩子的作品', run: chooseClass },
       { label: '跟我導覽', run: tour },
+      { label: `彩蛋圖鑑（${eggs.count()}/${EGGS.length}）`, run: () => eggs.book() },
       { label: '功能介紹', run: () => help() },
       { label: '回到全景', run: () => { hud.closeInfo(); qchick.leave(); goHome(); } },
       { label: '我的進度', run: slots },

@@ -62,7 +62,8 @@ function makePerson(p, rnd) {
   return { root, body, legL, legR, armL, armR, height: 1.45 * scale };
 }
 
-export function createPeople(scene, clusters) {
+/** onTalk(person)：點了可以說話的大人名牌。 */
+export function createPeople(scene, clusters, { onTalk } = {}) {
   const people = [];
   const tags = [];
   const rnd = seeded(2026);
@@ -75,7 +76,7 @@ export function createPeople(scene, clusters) {
       scene.add(m.root);
       const person = {
         ...m, tile, cluster: c, student: !!p.student,
-        modelKey: modelKeyFor(p, turn), tag: null,
+        modelKey: modelKeyFor(p, turn), tag: null, info: p,
         angle: rnd() * Math.PI * 2,
         speed: p.student ? 1.0 + rnd() * 0.4 : 0.7 + rnd() * 0.2,
         state: 'idle', wait: rnd() * 3, phase: rnd() * 10,
@@ -83,9 +84,15 @@ export function createPeople(scene, clusters) {
       };
       placeOnRing(person);
       if (!p.student) {
-        const el = document.createElement('div');
-        el.className = 'name-tag';
+        // 大人的名牌可以點：點了就和他說話
+        const el = document.createElement(onTalk ? 'button' : 'div');
+        el.className = onTalk ? 'name-tag talk' : 'name-tag';
         el.textContent = p.name ? `${p.role} ${p.name}` : p.role;
+        if (onTalk) {
+          el.type = 'button';
+          el.setAttribute('aria-label', `和${el.textContent}說話`);
+          el.addEventListener('click', () => onTalk(person));
+        }
         const tag = new CSS2DObject(el);
         tag.position.set(0, m.height / m.root.scale.x + 0.35, 0);
         m.root.add(tag);
@@ -207,5 +214,12 @@ export function createPeople(scene, clusters) {
     }
   }
 
-  return { update, upgrade, tags, count: people.length };
+  /** 說話時停下來、轉向鏡頭。 */
+  function hold(p, seconds, toward) {
+    p.state = 'idle';
+    p.wait = seconds;
+    if (toward) p.root.rotation.y = Math.atan2(toward.x - p.root.position.x, toward.z - p.root.position.z);
+  }
+
+  return { update, upgrade, hold, tags, count: people.length };
 }

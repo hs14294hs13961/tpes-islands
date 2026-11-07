@@ -14,6 +14,12 @@ import { createHud } from './ui/hud.js';
 import { createDialog } from './ui/dialog.js';
 import { createGuide } from './ui/guide.js';
 import { createQChick } from './scene/qchick.js';
+import { createQCat } from './scene/qcat.js';
+import { createEggMarkers } from './scene/eggMarkers.js';
+import { createEggs } from './ui/eggs.js';
+import { createStaffTalk } from './ui/staffTalk.js';
+import { loadSocial } from './data/social.js';
+import { liveMode } from './scene/env.js';
 import { GLOW } from './scene/kit.js';
 
 const mobile = matchMedia('(max-width: 760px)').matches;
@@ -46,7 +52,7 @@ reading.recordCount = readingRecords(data, reading).length;
 const islands = buildIslandList(data.currentYear, data, reading);
 const world = buildWorld(scene, islands);
 const env = createEnv(scene, { lamps: world.lamps, haloMat: world.haloMat, mobile });
-const people = createPeople(scene, world.clusters);
+const people = createPeople(scene, world.clusters, { onTalk: (p) => talkTo(p) });
 loadCharacters(people.upgrade); // 不等模型，先讓島浮出來，下載好的島民再換裝
 
 // ── 鏡頭 ─────────────────────────────────────────────
@@ -117,6 +123,7 @@ const hud = createHud({
   },
   onHome: () => { birdOff(); qchick.leave(); goHome(); },
   onButler: () => guide.menu(),
+  getSocial: () => social,
   onBird: (on) => {
     if (on) {
       controls.minPolarAngle = 0;
@@ -127,7 +134,27 @@ const hud = createHud({
 
 const qchick = createQChick(scene, { camera, controls });
 const dialog = createDialog({ onOpen: () => qchick.speak(true), onClose: () => qchick.speak(false) });
-const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.clusters, pick, focus, goHome });
+const eggs = createEggs({ onFound: () => qchick.hop() });
+const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.clusters, pick, focus, goHome, eggs });
+
+// 教職員、太平Q喵、藏在島上的彩蛋
+const qcat = createQCat(scene, { camera });
+const isNight = () => (env.mode === 'live' ? liveMode() : env.mode) === 'night';
+const eggMarkers = createEggMarkers(scene, world.clusters, { isFound: (id) => eggs.found(id), isNight });
+const staff = createStaffTalk({ dialog, eggs, qcat, reading, clusters: world.clusters, mapUrl: SCHOOL.mapUrl, pick });
+let social = { comments: {}, reflections: [] };
+loadSocial().then((s) => { social = s; });
+
+function talkTo(person) {
+  hud.closeInfo();
+  const at = person.root.position;
+  flyTo(at.clone().setY(1.5), mobile ? 26 : 20, 1.05);
+  people.hold(person, 14, camera.position);
+  staff.talk(person);
+}
+
+// 從 3D 校園小遊戲回來：補跳那邊拿到的彩蛋
+addEventListener('visibilitychange', () => { if (!document.hidden) eggs.checkNew(); });
 
 function birdOff() {
   document.getElementById('btn-bird').classList.remove('on');
@@ -143,6 +170,9 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   if (qchick.hit(ray)) { guide.menu(); return; }
+  if (qcat.hit(ray)) { staff.meetCat(); return; }
+  const egg = eggMarkers.hit(ray);
+  if (egg) { eggs.unlock(egg); return; }
   const hit = ray.intersectObjects(world.pickables, false)[0];
   if (!hit) return;
   const { cluster, tile } = hit.object.userData.pick;
@@ -188,6 +218,8 @@ renderer.setAnimationLoop(() => {
   env.update(dt, simTime);
   if (!paused) people.update(dt, simTime);
   qchick.update(dt, clock.elapsedTime);
+  qcat.update(dt, clock.elapsedTime);
+  eggMarkers.update(clock.elapsedTime, camera);
   for (const f of world.flames) f.scale.y = 1 + Math.sin(simTime * 12 + f.id) * 0.15;
   GLOW.fire.emissiveIntensity = 0.7 + Math.sin(simTime * 9) * 0.15;
   labels.update(camera, showNames, people.tags);
@@ -198,3 +230,4 @@ renderer.setAnimationLoop(() => {
 
 hud.ready();
 guide.start();
+setTimeout(() => eggs.checkNew(), 1500);

@@ -1,6 +1,7 @@
 // 閱讀島內容表的唯讀介面：把試算表轉成閱讀島要的 JSON（和 app/src/data/reading.json 同格式）。
 // 貼在「閱讀島內容表」試算表的 擴充功能 → Apps Script，部署成網頁應用程式。
-// 這是獨立專案，和電子書櫃無關：這裡再怎麼改都碰不到上傳功能。只讀不寫。
+// 這是獨立專案，和電子書櫃無關：這裡再怎麼改都碰不到上傳功能。
+// 另外收網站的留言與得報心得，存在本試算表的「留言審核」分頁（見最下面）。
 // 老師填的內容可能缺欄、格式不一，一律整理過才輸出；填一半的主題月直接略過，不會弄壞網站。
 
 const CACHE_KEY = 'reading-v1';
@@ -10,6 +11,7 @@ const DEFAULT_COLOR = '#7d62b8';
 const UPLOAD_URL = 'https://hs14294hs13961.github.io/tpes-islands/upload.html';
 
 function doGet(e) {
+  if (e && e.parameter && e.parameter.api === 'social') return jsonOutput_(listSocial_());
   // 網站讀資料走 ?api=reading；人直接打開這個網址時給一句說明，不要看到一大片資料
   if (!e || !e.parameter || e.parameter.api !== 'reading') {
     return HtmlService.createHtmlOutput(
@@ -36,6 +38,10 @@ function jsonOutput_(text) {
 function doPost(e) {
   try {
     const req = JSON.parse(e.postData.contents);
+    // 留言與心得：任何人都能送，但只有審核通過的才會出現在網站上
+    if (req.action === 'comment' || req.action === 'reflect') {
+      return jsonOutput_(JSON.stringify({ ok: true, status: postSocial_(req) }));
+    }
     checkCode_(req.code);
     const result = req.action === 'info' ? uploadInfo_() : uploadFile_(req.file);
     return jsonOutput_(JSON.stringify({ ok: true, ...result }));
@@ -272,4 +278,138 @@ function uploadFile_(f) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ─── 留言與得報心得 ─────────────────────────────────────────
+// 網站上的「給孩子留言」（成果預覽視窗）與「得報心得」（五甲黃薇老師）都送到這裡。
+// 不收姓名，只選身分。自動判斷：
+//   有負面詞、或有電話／網址等個資 → 待審，寄信通知
+//   有正面詞、沒有負面詞 → 直接通過
+//   看不出來 → 待審，寄信通知
+// 審核：到「留言審核」分頁把「狀態」改成「通過」或「不通過」，網站一分鐘內更新。
+// 通知信寄給部署這支程式的帳號；要改寄別人，在指令碼屬性加 NOTIFY_EMAIL。
+
+const SOCIAL_SHEET = '留言審核';
+const SOCIAL_HEAD = ['時間', '類型', '對象編號', '對象標題', '身分', '內容', '狀態', '原因'];
+const SOCIAL_CACHE = 'social-v1';
+const ROLES = ['家長', '學生', '老師', '民眾'];
+const LIMITS = { comment: [2, 80], reflect: [30, 50] };
+
+const NEGATIVE = [
+  '笨', '白癡', '白痴', '智障', '腦殘', '低能', '廢物', '垃圾', '去死', '死掉', '滾', '閉嘴', '噁心', '醜', '肥豬', '豬頭',
+  '幹', '靠北', '靠杯', '媽的', '他媽', '三小', '機掰', '雞掰', '屁', '爛', '難看', '無聊', '討厭', '遜', '差勁', '抄襲', '作弊',
+  '霸凌', '欺負', '打你', '揍', '殺', '恐怖', '可憐', '丟臉', '沒用', '不會', '好醜', '好爛', '很爛', '超爛',
+  'fuck', 'shit', 'stupid', 'idiot', 'ugly', 'loser', 'suck',
+];
+const POSITIVE = [
+  '棒', '讚', '厲害', '好看', '加油', '喜歡', '優秀', '用心', '精彩', '漂亮', '可愛', '感動', '謝謝', '感謝', '佩服', '學到',
+  '有趣', '認真', '進步', '創意', '好美', '很好', '不錯', '了不起', '太強', '欣賞', '期待', '驕傲', '開心', '溫暖', '細心',
+  '仔細', '努力', '辛苦', '尊重', '分享', '清楚', '豐富', '啟發', '收穫', '體會', '明白', '學會', '知道了', '想到', '值得', '鼓勵',
+  'good', 'great', 'nice', 'cool', 'love', 'amazing', 'awesome', '👍', '❤', '😊',
+];
+const PRIVATE = [/\d{4}[-\s]?\d{3}[-\s]?\d{3}/, /\d{2,4}-\d{6,8}/, /https?:\/\//i, /www\./i, /@/, /line\s*id/i, /[A-Z][12]\d{8}/i];
+
+function socialSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SOCIAL_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(SOCIAL_SHEET);
+    sheet.appendRow(SOCIAL_HEAD);
+    sheet.setFrozenRows(1);
+    sheet.getRange('G2:G').setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(['待審', '通過', '不通過'], true).build()
+    );
+  }
+  return sheet;
+}
+
+/** 判斷一則文字：回傳 { status: '通過'|'待審', reason }。 */
+function judge_(text) {
+  const plain = String(text).toLowerCase().replace(/[\s.,，。、！!？?~～…\-_*]/g, '');
+  const bad = NEGATIVE.filter((w) => plain.includes(w.toLowerCase()));
+  if (bad.length) return { status: '待審', reason: `負面詞：${bad.slice(0, 3).join('、')}` };
+  if (PRIVATE.some((re) => re.test(text))) return { status: '待審', reason: '可能有電話、網址或個資' };
+  const good = POSITIVE.filter((w) => plain.includes(w.toLowerCase()));
+  if (good.length) return { status: '通過', reason: `正面詞：${good.slice(0, 3).join('、')}` };
+  return { status: '待審', reason: '看不出正面或負面' };
+}
+
+function postSocial_(req) {
+  const kind = req.action;
+  const text = String(req.text || '').replace(/\s+/g, ' ').trim();
+  const count = Array.from(text.replace(/\s/g, '')).length;
+  const [min, max] = LIMITS[kind];
+  if (count < min || count > max) throw new Error(`請寫 ${min}～${max} 字`);
+  if (ROLES.indexOf(req.role) < 0) throw new Error('請先選擇身分');
+  const target = String(req.target || '').slice(0, 200);
+  if (!target) throw new Error('不知道要留言給哪一件作品');
+
+  // 防灌水：全站每 10 分鐘最多 60 則，同一件作品同一句話不能重複送
+  const cache = CacheService.getScriptCache();
+  const recent = Number(cache.get('social-count') || 0);
+  if (recent >= 60) throw new Error('現在留言的人太多了，請過幾分鐘再試');
+  const dupKey = `dup-${Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, target + text))}`;
+  if (cache.get(dupKey)) throw new Error('這則已經送過了');
+
+  const { status, reason } = judge_(text);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sheet = socialSheet_();
+    const row = sheet.getLastRow() + 1;
+    sheet.getRange(row, 1, 1, SOCIAL_HEAD.length).setNumberFormat('@').setValues([[
+      Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd HH:mm'),
+      kind === 'comment' ? '留言' : '得報心得',
+      target,
+      String(req.title || '').slice(0, 120),
+      req.role,
+      text,
+      status,
+      reason,
+    ]]);
+  } finally {
+    lock.releaseLock();
+  }
+  cache.put('social-count', String(recent + 1), 600);
+  cache.put(dupKey, '1', 600);
+  if (status === '通過') cache.remove(SOCIAL_CACHE);
+  else notify_(kind, req, text, reason);
+  return status === '通過' ? 'published' : 'pending';
+}
+
+function notify_(kind, req, text, reason) {
+  try {
+    const to = PropertiesService.getScriptProperties().getProperty('NOTIFY_EMAIL') || Session.getEffectiveUser().getEmail();
+    if (!to) return;
+    const url = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+    MailApp.sendEmail({
+      to,
+      subject: `【太平群島】有一則${kind === 'comment' ? '留言' : '得報心得'}等你審核`,
+      body: `對象：${req.title || req.target}\n身分：${req.role}\n內容：${text}\n判斷：${reason}\n\n`
+        + `到「${SOCIAL_SHEET}」分頁把狀態改成「通過」或「不通過」：\n${url}`,
+    });
+  } catch (err) { /* 寄信額度用完也不能讓留言失敗 */ }
+}
+
+/** 網站讀的：只有「通過」的留言與心得，不含時間以外的任何個人資料。 */
+function listSocial_() {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get(SOCIAL_CACHE);
+  if (hit) return hit;
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SOCIAL_SHEET);
+  const out = { comments: {}, reflections: [] };
+  if (sheet && sheet.getLastRow() > 1) {
+    const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, SOCIAL_HEAD.length).getValues();
+    rows.forEach(([time, kind, target, title, role, text, status]) => {
+      if (String(status).trim() !== '通過') return;
+      const item = { role: String(role), text: String(text), date: String(time).slice(0, 10) };
+      if (kind === '留言') (out.comments[target] = out.comments[target] || []).push(item);
+      else out.reflections.push({ ...item, target: String(target), title: String(title) });
+    });
+    Object.keys(out.comments).forEach((k) => { out.comments[k] = out.comments[k].slice(-30).reverse(); });
+    out.reflections = out.reflections.slice(-60).reverse();
+  }
+  const json = JSON.stringify(out);
+  try { cache.put(SOCIAL_CACHE, json, 60); } catch (err) { /* 太大就不快取 */ }
+  return json;
 }

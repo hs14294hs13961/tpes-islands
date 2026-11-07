@@ -21,7 +21,7 @@ function monthStatus(m) {
 }
 
 /** 回傳 render(cluster, tile)，把內容畫進 root。 */
-export function createReadingPanel({ root, reading, openDoc, recordCard, onGoTile }) {
+export function createReadingPanel({ root, reading, openDoc, recordCard, onGoTile, getSocial }) {
   let monthIndex = reading.current;
   let grade = 0;
   let current = null;
@@ -121,6 +121,16 @@ export function createReadingPanel({ root, reading, openDoc, recordCard, onGoTil
       m.articles.forEach((a) => {
         const meta = [a.issue && `第 ${a.issue} 期`, '★'.repeat(a.stars || 0)].filter(Boolean).join('・');
         box.append(row(a.title, meta, { url: a.url }));
+      });
+      // 大家的心得（找五甲黃薇老師寫的，審核通過才會出現）
+      const urls = new Set(m.articles.map((a) => a.url));
+      const mine = (getSocial?.().reflections || []).filter((r) => urls.has(r.target));
+      box.append(el('p', 'read-sub', '大家的得報心得'));
+      if (!mine.length) box.append(empty('還沒有心得。到五年甲班的島找黃薇老師，抽一篇文章來寫吧！'));
+      mine.forEach((r) => {
+        const c = el('div', 'read-card');
+        c.append(el('span', 'read-card-tag', `一位${r.role}・讀〈${r.title}〉`), el('span', 'read-card-text', r.text));
+        box.append(c);
       });
     },
     sheets(_m, box) {

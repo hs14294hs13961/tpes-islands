@@ -70,6 +70,24 @@
       </header>
       <p class="viewer-desc" id="viewer-desc"></p>
       <div class="viewer-body" id="viewer-body"></div>
+      <section class="talk" id="talk" hidden>
+        <button type="button" class="talk-toggle" id="talk-toggle" aria-expanded="false" aria-controls="talk-panel">給孩子留言<span id="talk-count"></span></button>
+        <div class="talk-panel" id="talk-panel" hidden>
+          <ul class="talk-list" id="talk-list" hidden></ul>
+          <div id="talk-compose"></div>
+          <div class="talk-foot">
+            <p class="talk-note" id="talk-note" aria-live="polite"></p>
+            <button type="button" class="q-opt primary" id="talk-send" disabled>送出留言</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="egg-modal" id="egg-modal" hidden>
+    <div class="card egg-card" role="dialog" aria-modal="true" aria-label="太平小彩蛋">
+      <button type="button" class="close" id="egg-close" aria-label="關閉">×</button>
+      <div id="egg-content"></div>
     </div>
   </div>
 
@@ -105,6 +123,7 @@
         <p class="sr-only" id="q-live" role="status"></p>
       </div>
     </div>
+    <div class="q-extra" id="q-extra"></div>
     <div class="q-options" id="q-options"></div>
   </section>
 

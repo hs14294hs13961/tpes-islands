@@ -12,7 +12,15 @@ export const SCHOOL = {
   apiUrl: 'https://script.google.com/macros/s/AKfycbyzgcnqi0FfQzPmVZv7503wCspJNTwYMViYlbnIdPQ2ZdDHCZK90GeBCkwLJp4wmNCO/exec?api=islands',
   // 閱讀島內容表的唯讀介面（獨立的 Apps Script，部署後把網址填在這裡；空字串＝用內建 reading.json）
   readingApiUrl: 'https://script.google.com/macros/s/AKfycby02HfGXZnDwb-CrnGh5MJWlNm8AT1c0zZA2SZkeZttXTutywqKsqJX9DV36lQsIJPz/exec',
+  // 3D 校園地圖：GitHub Pages 上和群島同一個網域，小遊戲過關可以直接寫進群島的存檔
+  mapUrl: mapUrl(),
 };
+
+function mapUrl() {
+  if (typeof location === 'undefined') return 'https://hs14294hs13961.github.io/tpes-3d-map/';
+  if (location.hostname === 'localhost') return 'http://localhost:5173/';
+  return new URL(location.pathname.includes('/preview/') ? '../../tpes-3d-map/preview/' : '../tpes-3d-map/', location.href).href;
+}
 
 // 品牌色（PRD 第 7 節：仙草花紫＋小雞橘）
 export const PALETTE = {
@@ -77,7 +85,8 @@ const FIXED = [
   },
   {
     id: 'campus', name: '太平校園島', en: 'CAMPUS ISLE', center: [-1, 5],
-    tagline: '真實校園的縮小版；之後可以從這裡走進 3D 校園地圖',
+    tagline: '真實校園的縮小版；也可以走進 3D 校園地圖，到處走走看',
+    link: { map: true, label: '走進 3D 校園地圖 ↗' },
     // 依真實校園配置：校門在最南端，進門是水池，正中央是球場，後方是教學大樓與司令台
     tiles: [
       { name: '球場', type: 'court', ground: 'lawn', bare: true, desc: '校園正中央，紅色跑道圍著綠色球場，下課時最熱鬧的地方。' },
