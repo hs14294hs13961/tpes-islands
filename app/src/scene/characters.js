@@ -18,7 +18,7 @@ const MODELS = {
   principal: { file: 'principal.glb', logo: 'polo' },
   'director-zhuang': { file: 'director-zhuang.glb', logo: 'polo' },
   'teacher-huang': { file: 'teacher-huang.glb', logo: 'polo', erase: [-0.056, 0.722, -0.028, 0.785] },
-  clerk: { file: 'clerk.glb', logo: 'polo' },
+  clerk: { file: 'clerk.glb', logo: 'polo', oneTail: true },
   uncle: { file: 'uncle.glb' },
 };
 // 圖案位置都用骨架比例算（f：臀到脖子之間的高度比例；w、x：相對肩寬），每位身材不同也對得上
@@ -168,6 +168,86 @@ function bakeLogo(root, logo, spec, { cover, erase }) {
   mesh.material.needsUpdate = true;
 }
 
+// 幹事李易霖：設計是腦後一條低馬尾，3D 生成卻做成耳後左右各一條（從正面看像長髮）。
+// 把脖子後面的深色頭髮往中線收攏，兩條併成一條。
+// 模型頂點是壓縮過的整數，先換算成站姿時的實際位置（公尺）來判斷，再換回去改。
+export function mergeTails(root) {
+  root.updateMatrixWorld(true);
+  let mesh;
+  root.traverse((o) => { if (o.isSkinnedMesh) mesh = o; });
+  const img = mesh.material.map.image;
+  const cv = document.createElement('canvas');
+  cv.width = img.width;
+  cv.height = img.height;
+  const g = cv.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0);
+  const px = g.getImageData(0, 0, cv.width, cv.height).data;
+  const { position: pos, uv } = mesh.geometry.attributes;
+  const world = (i, v) => mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld);
+  // 原始 x 與實際 x 是線性關係：拿最左、最右兩點求出比例與位移
+  const v = new THREE.Vector3();
+  let lo = 0, hi = 0;
+  for (let i = 1; i < pos.count; i++) {
+    if (pos.getX(i) < pos.getX(lo)) lo = i;
+    if (pos.getX(i) > pos.getX(hi)) hi = i;
+  }
+  const xl = world(lo, v).x, xh = world(hi, v).x;
+  const sx = (xh - xl) / (pos.getX(hi) - pos.getX(lo)), bx = xl - sx * pos.getX(lo);
+  // 同一個位置可能有好幾個頂點（貼圖接縫切開的），要一起動，不然會裂開、長出尖刺
+  const groups = new Map();
+  const at = [];
+  for (let i = 0; i < pos.count; i++) {
+    const p = world(i, new THREE.Vector3());
+    at.push(p);
+    if (p.y < 0.8 || p.y > 1.0 || p.z > -0.05) continue;
+    const key = `${Math.round(p.x * 2000)},${Math.round(p.y * 2000)},${Math.round(p.z * 2000)}`;
+    if (!groups.has(key)) groups.set(key, { ids: [], dark: false });
+    const grp = groups.get(key);
+    grp.ids.push(i);
+    const t = (Math.floor(uv.getY(i) * cv.height) * cv.width + Math.floor(uv.getX(i) * cv.width)) * 4;
+    if (px[t] + px[t + 1] + px[t + 2] < 150) grp.dark = true; // 深色＝頭髮
+  }
+  const move = new Set();
+  for (const grp of groups.values()) if (grp.dark) grp.ids.forEach((i) => move.add(i));
+  // 再往外多帶一圈相鄰的頂點，頭髮邊緣才不會被拉出尖角
+  const index = mesh.geometry.index;
+  const ring = new Set();
+  for (let f = 0; f < index.count; f += 3) {
+    const tri = [index.getX(f), index.getX(f + 1), index.getX(f + 2)];
+    if (tri.some((i) => move.has(i))) tri.forEach((i) => { if (at[i].y >= 0.8 && at[i].z < -0.03) ring.add(i); });
+  }
+  for (const i of ring) {
+    const p = at[i];
+    const key = `${Math.round(p.x * 2000)},${Math.round(p.y * 2000)},${Math.round(p.z * 2000)}`;
+    (groups.get(key)?.ids || [i]).forEach((j) => move.add(j));
+  }
+  for (const i of move) {
+    const { x, y } = at[i];
+    const w = THREE.MathUtils.smoothstep(1.0 - y, 0, 0.05); // 越往下收得越緊
+    const nx = x - Math.sign(x) * Math.min(Math.abs(x), 0.07) * w; // 整條平移到中間，粗細不變，兩條疊成一條
+    pos.setX(i, (nx - bx) / sx);
+  }
+  if (pos.isInterleavedBufferAttribute) pos.data.needsUpdate = true;
+  else pos.needsUpdate = true;
+}
+
+// 模型的站姿手臂張開約 60 度（A 字），站著不動時很僵硬，往下收一點比較自然。
+// 原本的站姿記在 userData.rest0，套走路動作時要用原本的站姿算差值。單位：弧度
+const ARM_DOWN = 0.26;
+export function lowerArms(root) {
+  root.updateMatrixWorld(true);
+  root.traverse((o) => { if (o.isBone && !o.userData.rest0) o.userData.rest0 = o.quaternion.clone(); });
+  const fwd = new THREE.Vector3(0, 0, 1);
+  for (const [name, side] of [['LeftArm', 1], ['RightArm', -1]]) {
+    const bone = root.getObjectByName(name);
+    if (!bone) continue;
+    const parent = bone.parent.getWorldQuaternion(new THREE.Quaternion());
+    const down = new THREE.Quaternion().setFromAxisAngle(fwd, -side * ARM_DOWN);
+    bone.quaternion.premultiply(parent.clone().invert().multiply(down).multiply(parent));
+  }
+  root.updateMatrixWorld(true);
+}
+
 // 原始動作的手幾乎貼著身體，遠看像沒有擺手，所以依腿的節奏再加一段前後擺動。單位：弧度
 const ARM_SWING = 0.36;
 const ELBOW_REST = 0.08, ELBOW_SWING = 0.28;
@@ -210,7 +290,7 @@ function retargetWalk(clip, src, tgt) {
     const a = src.getObjectByName(name), b = tgt.getObjectByName(name);
     if (!a || !b) continue;
     if (prop === 'quaternion') {
-      const inv = a.quaternion.clone().invert();
+      const inv = (a.userData.rest0 || a.quaternion).clone().invert();
       const values = new Float32Array(t.values.length);
       const isArm = armForward(name, 0) !== null;
       const parent = b.parent.getWorldQuaternion(new THREE.Quaternion()), parentInv = parent.clone().invert();
@@ -247,8 +327,10 @@ export async function loadCharacters(onReady) {
     const def = MODELS[key];
     try {
       const gltf = await loader.loadAsync(BASE + def.file);
-      const walk = retargetWalk((source || gltf).animations[0], (source || gltf).scene, gltf.scene);
       if (def.logo && images[def.logo]) bakeLogo(gltf.scene, images[def.logo], LOGOS[def.logo], def);
+      if (def.oneTail) mergeTails(gltf.scene);
+      lowerArms(gltf.scene);
+      const walk = retargetWalk((source || gltf).animations[0], (source || gltf).scene, gltf.scene);
       gltf.scene.traverse((o) => {
         if (o.isMesh) {
           o.frustumCulled = false; // 骨架動畫會讓包圍盒跑掉，乾脆不裁切

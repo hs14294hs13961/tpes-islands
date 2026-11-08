@@ -12,11 +12,18 @@ function el(tag, cls, text) {
   return e;
 }
 
-/** 彩蛋的樣子：奶油色蛋殼、主題色斑點、一圈青綠色緞帶（太平T 的顏色）。沒找到的是灰色問號。 */
+/** 彩蛋的樣子：設計稿切出來的圖（public/eggs/<id>.png，奶油色蛋殼＋青綠緞帶＋各自的圖案）。
+ *  沒找到的只顯示灰色剪影和問號；圖讀不到時退回 CSS 畫的蛋。 */
 export function eggArt(egg, locked = false, size = '') {
-  const art = el('span', `egg-art ${size}${locked ? ' locked' : ''}`);
+  const art = el('span', `egg-art has-img ${size}${locked ? ' locked' : ''}`);
   art.style.setProperty('--egg', locked ? '#c9c4bb' : egg.color);
   art.setAttribute('aria-hidden', 'true');
+  const img = el('img', 'egg-img');
+  img.src = `./public/eggs/${egg.id}.png`;
+  img.alt = '';
+  img.decoding = 'async';
+  img.addEventListener('error', () => { img.remove(); art.classList.remove('has-img'); });
+  art.append(img);
   if (locked) art.append(el('span', 'egg-q', '?'));
   return art;
 }

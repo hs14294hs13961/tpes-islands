@@ -1,4 +1,4 @@
-// 太平Q喵：灰褐虎斑小貓，躲在某一格的設施裡；點開那一格才會跑出來，在建築外圍跑來跑去，點到牠可以餵貓糧。
+// 太平Q喵：淺黃褐虎斑小貓，躲在某一格的設施裡；點開那一格才會跑出來，在建築外圍跑來跑去，點到牠可以餵貓糧。
 // 現在是程式拼的暫代貓；Higgsfield 3D 模型確認後放到 MODEL，就會自動換上。
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
@@ -7,10 +7,10 @@ import { TOP } from './kit.js';
 
 const MODEL = null; // 例：'./public/models/qcat.glb'
 const SHOW_WITHIN = 75;
-// 配色照學校那隻真貓（美術/參考/貓咪）：灰褐虎斑、奶油白胸口、深色腳掌、黑尾尖
-const GREY = 0x8f8379;
-const STRIPE = 0x3f3833;
-const WHITE = 0xf3ead8;
+// 配色照學校那隻真貓（美術/參考/貓咪）：淺黃褐色虎斑、奶油白胸口和腳掌、黑尾尖
+const GREY = 0xc9a874; // 身體底色（淺黃褐）
+const STRIPE = 0x6e5236;
+const WHITE = 0xf6ead0;
 const DARK = 0x2a2522;
 
 function mat(color, rough = 0.55) {
@@ -36,8 +36,8 @@ function makeCat() {
   add(new THREE.SphereGeometry(0.22, 16, 12).scale(1, 1.1, 0.7), white, 0, 0.33, 0.2);
   const dark = mat(DARK, 0.5);
   for (const x of [-0.17, 0.17]) {
-    add(new THREE.SphereGeometry(0.1, 12, 10), dark, x, 0.07, 0.2);
-    add(new THREE.SphereGeometry(0.1, 12, 10), dark, x, 0.08, -0.18);
+    add(new THREE.SphereGeometry(0.1, 12, 10), white, x, 0.07, 0.2);
+    add(new THREE.SphereGeometry(0.1, 12, 10), grey, x, 0.08, -0.18);
   }
   const head = new THREE.Group();
   head.position.set(0, 0.82, 0.05);

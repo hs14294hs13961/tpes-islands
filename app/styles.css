@@ -293,6 +293,10 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
 }
 .egg-art.big { width: 112px; height: 140px; animation: egg-pop .6s cubic-bezier(.3,1.6,.5,1) both; }
 .egg-art.locked { background: radial-gradient(circle at 40% 35%, #f1eee8, #d9d4ca 75%); box-shadow: inset -4px -6px 10px rgba(0,0,0,.06); }
+.egg-art.has-img, .egg-art.has-img.locked { background: none; box-shadow: none; border-radius: 0; }
+.egg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 6px rgba(60, 40, 20, .18)); }
+.egg-art.locked .egg-img { filter: brightness(0) opacity(.13); }
+.egg-art.locked .egg-q { position: absolute; color: #a39d92; text-shadow: none; }
 .egg-q { font-size: 24px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.15); }
 @keyframes egg-pop { from { transform: scale(.4) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .egg-kicker { margin: 0 0 10px; font-size: 13px; font-weight: 800; letter-spacing: .08em; color: var(--accent, #f08a3c); }

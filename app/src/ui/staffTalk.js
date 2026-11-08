@@ -113,7 +113,7 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
   function openedTile(tile) {
     if (!quest.active || quest.fed || !qcat.reveal(tile)) return false;
     dialog.say({
-      text: `喵！（有個灰褐色的影子從「${tile.name}」裡衝出來，在建築旁邊跑來跑去！）`,
+      text: `喵！（有個淺黃色的影子從「${tile.name}」裡衝出來，在建築旁邊跑來跑去！）`,
       name: '太平Q喵',
       faceUrl: './public/staff/qcat.jpg',
       options: [{ label: '快點牠！' }],
@@ -128,7 +128,7 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
       speak('喵～（Q喵舔舔嘴巴，看起來很滿足）', [{ label: '回去告訴校長' }]);
       return;
     }
-    speak('喵～？（灰褐色的虎斑小貓探出頭來，肚子咕嚕咕嚕叫）', [
+    speak('喵～？（淺黃色的虎斑小貓探出頭來，肚子咕嚕咕嚕叫）', [
       {
         label: '餵牠吃貓糧',
         run: () => qcat.feed().then(() => {

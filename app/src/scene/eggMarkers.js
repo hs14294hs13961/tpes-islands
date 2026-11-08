@@ -4,9 +4,10 @@ import { TOP } from './kit.js';
 import { EGGS } from '../data/eggs.js';
 
 const SHOW_WITHIN = 70; // 鏡頭離彩蛋多近才出現（全景下找不到，鼓勵逛島）
-const EGG_GEO = new THREE.SphereGeometry(0.42, 20, 14).scale(1, 1.28, 1);
-const BAND_GEO = new THREE.TorusGeometry(0.43, 0.06, 8, 24).rotateX(Math.PI / 2);
-const BAND_MAT = new THREE.MeshStandardMaterial({ color: 0x5fb8a6, roughness: 0.5 });
+// 看得到的是彩蛋設計圖（public/eggs/<id>.png）做成的看板，永遠面向鏡頭；點擊用一顆看不見的蛋形。
+const HIT_GEO = new THREE.SphereGeometry(0.42, 12, 10).scale(1, 1.28, 1);
+const HIT_MAT = new THREE.MeshBasicMaterial({ visible: false });
+const texLoader = new THREE.TextureLoader();
 
 export function createEggMarkers(scene, clusters, { isFound, isNight }) {
   const markers = [];
@@ -17,13 +18,12 @@ export function createEggMarkers(scene, clusters, { isFound, isNight }) {
     const tile = cluster?.tiles[egg.where.tile];
     if (!tile) return;
     const root = new THREE.Group();
-    const shell = new THREE.Mesh(EGG_GEO, new THREE.MeshStandardMaterial({
-      color: 0xfbf3e2, emissive: new THREE.Color(egg.color), emissiveIntensity: 0.35, roughness: 0.45,
-    }));
-    shell.castShadow = true;
-    const band = new THREE.Mesh(BAND_GEO, BAND_MAT);
-    band.position.y = 0.05;
-    root.add(shell, band);
+    const shell = new THREE.Mesh(HIT_GEO, HIT_MAT);
+    const tex = texLoader.load(`./public/eggs/${egg.id}.png`);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const art = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+    art.scale.set(0.84, 1.08, 1); // 圖是 170×220
+    root.add(shell, art);
     // 放在格子邊緣、避開中間的建築
     const a = 0.6 + i * 1.7;
     root.position.set(tile.pos.x + Math.cos(a) * 3.1, TOP + 0.62, tile.pos.z + Math.sin(a) * 3.1);
@@ -31,7 +31,7 @@ export function createEggMarkers(scene, clusters, { isFound, isNight }) {
     root.visible = false;
     shell.userData.eggId = egg.id;
     scene.add(root);
-    markers.push({ egg, root, shell, base: root.position.y, phase: i });
+    markers.push({ egg, root, shell, art, base: root.position.y, phase: i });
   });
 
   function update(t, camera) {
@@ -41,8 +41,9 @@ export function createEggMarkers(scene, clusters, { isFound, isNight }) {
         && camera.position.distanceTo(m.root.getWorldPosition(tmp)) < SHOW_WITHIN;
       if (!m.root.visible) continue;
       m.root.position.y = m.base + Math.sin(t * 2 + m.phase) * 0.12;
-      m.root.rotation.y = t * 0.8 + m.phase;
-      m.shell.material.emissiveIntensity = 0.3 + Math.sin(t * 3 + m.phase) * 0.15;
+      m.art.material.rotation = Math.sin(t * 2.4 + m.phase) * 0.12; // 左右搖一搖，像在叫人
+      const s = 1 + Math.sin(t * 3 + m.phase) * 0.04;
+      m.art.scale.set(0.84 * s, 1.08 * s, 1);
     }
   }
 
