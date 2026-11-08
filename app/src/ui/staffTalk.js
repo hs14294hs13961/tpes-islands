@@ -68,8 +68,8 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
   function hint(speak) {
     const lines = [
       `我剛剛好像看到牠往「${quest.cluster.name}」跑過去了。`,
-      `牠最喜歡待在「${quest.tile.name}」那一格附近。`,
-      '靠近一點，仔細看格子的邊邊，有沒有一條黑尾尖的虎斑尾巴在搖？',
+      `牠最喜歡躲在「${quest.tile.name}」裡面，點開那一格看看！`,
+      '點開牠躲的那一格，牠就會從裡面跑出來，在建築旁邊跑來跑去。趁牠停下來的時候點牠一下！',
     ];
     const text = lines[quest.hints];
     quest.hints = Math.min(quest.hints + 1, lines.length);
@@ -107,6 +107,18 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
       { label: '好，交給我！', run: () => startQuest(speak) },
       { label: '下次再說' },
     ]);
+  }
+
+  /** 點開了某一格：太平Q喵躲在這裡就跑出來，回傳有沒有找到。 */
+  function openedTile(tile) {
+    if (!quest.active || quest.fed || !qcat.reveal(tile)) return false;
+    dialog.say({
+      text: `喵！（有個灰褐色的影子從「${tile.name}」裡衝出來，在建築旁邊跑來跑去！）`,
+      name: '太平Q喵',
+      faceUrl: './public/staff/qcat.jpg',
+      options: [{ label: '快點牠！' }],
+    });
+    return true;
   }
 
   /** 點到太平Q喵。 */
@@ -171,5 +183,5 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
     setTimeout(() => form.focus(), 50);
   }
 
-  return { talk, meetCat };
+  return { talk, meetCat, openedTile };
 }

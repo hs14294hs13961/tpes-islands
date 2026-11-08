@@ -87,9 +87,11 @@ function goHome(instant = false) {
 }
 goHome(true);
 
+let onTileOpen = null; // 太平Q喵躲在設施裡：點開那一格牠才跑出來
 function pick({ cluster, tile }) {
   if (tile) flyTo(tile.pos.clone().setY(1), mobile ? 50 : 38, 0.95);
   else flyTo(cluster.center.clone().setY(1), cluster.small ? 40 : cluster.radius * 3.2 + 20, 0.9);
+  if (tile && onTileOpen?.(tile)) { guide.enterIsland(cluster); return; } // 找到貓就不擋住畫面
   hud.showInfo({ cluster, tile });
   guide.enterIsland(cluster);
 }
@@ -142,6 +144,7 @@ const qcat = createQCat(scene, { camera });
 const isNight = () => (env.mode === 'live' ? liveMode() : env.mode) === 'night';
 const eggMarkers = createEggMarkers(scene, world.clusters, { isFound: (id) => eggs.found(id), isNight });
 const staff = createStaffTalk({ dialog, eggs, qcat, reading, clusters: world.clusters, mapUrl: SCHOOL.mapUrl, pick });
+onTileOpen = (tile) => staff.openedTile(tile);
 let social = { comments: {}, reflections: [] };
 loadSocial().then((s) => { social = s; });
 

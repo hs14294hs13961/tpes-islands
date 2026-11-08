@@ -1,4 +1,4 @@
-// 太平Q喵：灰色虎斑小貓，躲在某一格的邊邊，要靠近才看得到。點了可以餵貓糧。
+// 太平Q喵：灰褐虎斑小貓，躲在某一格的設施裡；點開那一格才會跑出來，在建築外圍跑來跑去，點到牠可以餵貓糧。
 // 現在是程式拼的暫代貓；Higgsfield 3D 模型確認後放到 MODEL，就會自動換上。
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
@@ -79,7 +79,7 @@ export function createQCat(scene, { camera }) {
   scene.add(root);
   let parts = makeCat();
   root.add(parts.cat);
-  root.scale.setScalar(1.5);
+  root.scale.setScalar(0.85); // 跟島上的小人差不多高的一半，躲起來才像貓
   const hitMeshes = () => { const list = []; root.traverse((o) => { if (o.isMesh) list.push(o); }); return list; };
 
   if (MODEL) {
@@ -110,26 +110,45 @@ export function createQCat(scene, { camera }) {
   root.add(bowl);
 
   const hearts = [];
-  let hidden = false;
+  let home = null; // 躲在哪一格（還沒被發現前看不到）
+  let out = false; // 已經被點開那一格、跑出來了
+  let calm = false; // 吃飽了就不跑了
   let eating = 0;
+  let pop = 0; // 跑出來的彈出動畫
+  let ang = 0;
+  let dir = 1;
+  let run = 0; // >0 在跑、<0 坐著休息
+  const RING = 3.1; // 繞著建築外圍跑的半徑
   const tmp = new THREE.Vector3();
 
   return {
-    /** 躲到某一格的邊邊。 */
+    /** 躲進某一格的設施裡：先看不到，要點開那一格才會跑出來。 */
     hideAt(tile) {
-      const a = Math.random() * Math.PI * 2;
-      root.position.set(tile.pos.x + Math.cos(a) * 3.3, TOP, tile.pos.z + Math.sin(a) * 3.3);
-      root.rotation.y = a + Math.PI; // 面向格子中間
-      hidden = true;
+      home = tile;
+      out = false;
+      calm = false;
+      root.visible = false;
       bowl.visible = false;
     },
+    /** 點開了某一格：是牠躲的地方就跑出來，回傳有沒有找到。 */
+    reveal(tile) {
+      if (!home || tile !== home || out) return false;
+      out = true;
+      pop = 0;
+      ang = Math.random() * Math.PI * 2;
+      run = 2.5;
+      return true;
+    },
+    get hiding() { return !!home && !out; },
     leave() {
-      hidden = false;
+      home = null;
+      out = false;
       root.visible = false;
     },
     hit: (ray) => root.visible && ray.intersectObjects(hitMeshes(), false).length > 0,
     /** 餵貓糧：放碗、低頭吃、冒愛心。吃完回傳。 */
     feed() {
+      calm = true;
       bowl.visible = true;
       eating = 2.6;
       for (let i = 0; i < 5; i++) {
@@ -148,16 +167,32 @@ export function createQCat(scene, { camera }) {
       }, 2800));
     },
     update(dt, t) {
-      root.visible = hidden && camera.position.distanceTo(root.getWorldPosition(tmp)) < SHOW_WITHIN;
+      root.visible = out && camera.position.distanceTo(root.getWorldPosition(tmp)) < SHOW_WITHIN;
       if (!root.visible) return;
+      // 從建築裡彈出來
+      pop = Math.min(1, pop + dt * 2.5);
+      const k = pop < 1 ? Math.sin(pop * Math.PI * 0.5) * (1 + 0.25 * Math.sin(pop * Math.PI)) : 1;
+      root.scale.setScalar(0.85 * k);
+      // 沒吃飽前在建築外圍跑來跑去：跑一陣子、坐下來歪頭、換方向再跑
+      let speed = 0;
+      if (!calm && eating <= 0) {
+        run -= dt;
+        if (run < -1.4 - Math.random() * 0.6) { run = 1.8 + Math.random() * 2; if (Math.random() < 0.4) dir = -dir; }
+        if (run > 0) speed = 0.65; // 約每秒 2 公尺，點得到
+      }
+      ang += dir * speed * dt;
+      const r = RING * Math.min(1, pop * 1.3);
+      root.position.set(home.pos.x + Math.cos(ang) * r, TOP, home.pos.z + Math.sin(ang) * r);
+      if (speed > 0) root.rotation.y = Math.atan2(-Math.sin(ang) * dir, Math.cos(ang) * dir); // 面向跑的方向
+      parts.body.position.y = speed > 0 ? Math.abs(Math.sin(t * 16)) * 0.06 : 0;
       if (eating > 0) {
         eating -= dt;
         parts.body.rotation.x = 0.45 + Math.sin(t * 14) * 0.08;
       } else {
         parts.body.rotation.x *= 0.9;
-        parts.head.rotation.z = Math.sin(t * 1.3) * 0.12; // 歪頭
+        parts.head.rotation.z = speed > 0 ? 0 : Math.sin(t * 1.3) * 0.12; // 坐著時歪頭
       }
-      if (parts.tail) parts.tail.rotation.y = Math.sin(t * 3) * 0.35; // 搖尾巴
+      if (parts.tail) parts.tail.rotation.y = Math.sin(t * (speed > 0 ? 9 : 3)) * 0.35; // 搖尾巴
     },
   };
 }
