@@ -30,9 +30,9 @@ export const EGGS = [
     story: null, // 為什麼太平跟仙草有關
   },
   {
-    id: 'chick-feather', name: 'Q 雞的第一根羽毛', how: 'find', where: { cluster: 'campus', tile: 4 }, color: '#8b4a2b',
+    id: 'chick-feather', name: 'G米花的第一根羽毛', how: 'find', where: { cluster: 'campus', tile: 4 }, color: '#8b4a2b',
     hint: '去孩子們照顧雞的地方看看',
-    story: null, // 雞舍的故事、Q 雞怎麼誕生
+    story: null, // 雞舍的故事、G米花怎麼誕生
   },
   {
     id: 'taiping-t', name: '太平T', how: 'find', where: { cluster: 'campus', tile: 0 }, color: '#5fb8a6',

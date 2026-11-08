@@ -1,4 +1,4 @@
-// 太平Q雞的流程：開場、登島介紹、功能選單、導覽、存檔格。台詞在 data/qchickLines.js。
+// 太平G米花的流程：開場、登島介紹、功能選單、導覽、存檔格。台詞在 data/qchickLines.js。
 import { save, SLOT_COUNT } from '../data/save.js';
 import { recordsFor } from '../data/records.js';
 import { readingRecords } from '../data/reading.js';
@@ -155,7 +155,7 @@ export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick
       if (save.seen('intro') || save.quiet()) hud.butlerSay(latestLine());
       else setTimeout(opening, 900);
     },
-    /** 登島：Q 雞飛到島邊；第一次來時在資訊卡上方說一兩句。 */
+    /** 登島：G米花飛到島邊；第一次來時在資訊卡上方說一兩句。 */
     enterIsland(cluster) {
       qchick.moveTo(cluster.center, cluster.radius);
       if (save.quiet()) return;

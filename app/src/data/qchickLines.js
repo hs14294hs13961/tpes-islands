@@ -1,8 +1,8 @@
-// 太平Q雞的台詞。要改文字改這裡就好，不用動程式。主要讀者是家長與民眾，用語親切、一次一句短話。
+// 太平G米花的台詞。要改文字改這裡就好，不用動程式。主要讀者是家長與民眾，用語親切、一次一句短話。
 // face 是表情：wave 揮手、happy 開心、think 思考、wow 驚訝。
 
 export const LINES = {
-  opening: { face: 'wave', text: '歡迎來到太平群島！我是太平Q雞。太平國小孩子們的學習成果都在這裡，想從哪裡開始？' },
+  opening: { face: 'wave', text: '歡迎來到太平群島！我是太平G米花。太平國小孩子們的學習成果都在這裡，想從哪裡開始？' },
   welcomeBack: { face: 'happy', text: '歡迎回來！想看什麼，點我一下就好。' },
   menu: { face: 'happy', text: '有什麼我可以幫忙的嗎？' },
   pickClass: { face: 'think', text: '每一屆都有自己的島，想看哪一班的作品？' },

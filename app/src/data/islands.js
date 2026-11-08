@@ -92,7 +92,7 @@ const FIXED = [
       { name: '球場', type: 'court', ground: 'lawn', bare: true, desc: '校園正中央，紅色跑道圍著綠色球場，下課時最熱鬧的地方。' },
       { name: '樹屋', type: 'treehouse', ground: 'lawn', bare: true, desc: '太平樹屋：兩根彩色水泥管撐起木平台，旁邊就是老樹和稻田。' },
       { name: '水池', type: 'pond', ground: 'lawn', bare: true, desc: '一進校門就看得到的水池，有睡蓮、白鷺和停在枝頭的八哥。' },
-      { name: '水稻田', type: 'paddy', ground: 'lawn', bare: true, desc: '學校自己的小稻田，旁邊還種著太平Q雞最愛的仙草。' },
+      { name: '水稻田', type: 'paddy', ground: 'lawn', bare: true, desc: '學校自己的小稻田，旁邊還種著太平G米花最愛的仙草。' },
       { name: '夢想雞舍', type: 'coop', ground: 'lawn', bare: true, desc: '太平國小 27 屆夢想雞舍，由孩子們一起照顧。' },
       { name: '教學大樓', type: 'campus', ground: 'stone', bare: true, noWalk: true, desc: 'U 形的兩層樓校舍，屋頂鋪著太陽能板，把司令台抱在中間。' },
       { name: '司令台', type: 'campusStage', ground: 'stone', bare: true, noWalk: true, desc: '波浪頂棚下的舞台，背牆與底座的彩繪都是校園裡真實的壁畫。' },

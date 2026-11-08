@@ -49,7 +49,7 @@ export function createHud({ school, data, reading, residents, onGo, onTime, onTo
     onBird(on);
   });
 
-  // 右下角的太平Q雞：只在打開頁面時說一句，之後收成頭像，點了才打開選單
+  // 右下角的太平G米花：只在打開頁面時說一句，之後收成頭像，點了才打開選單
   ['wave', 'happy', 'think', 'wow'].forEach((f) => { new Image().src = `./public/qchick/${f}.png`; });
   let butlerTimer = null;
   function butlerSay({ face, text }) {

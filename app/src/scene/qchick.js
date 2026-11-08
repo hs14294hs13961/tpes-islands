@@ -1,5 +1,5 @@
-// 場景裡的太平Q雞。模型沒有骨架，動作全部用程式做：飄浮、跳躍壓扁、歪頭、轉身面向鏡頭，
-// 翅膀則在頂點著色器裡繞肩膀擺動。平常停在目前這座島的島邊，說話時才飛近鏡頭。
+// 場景裡的太平G米花。模型沒有骨架，動作全部用程式做：飄浮、跳躍壓扁、歪頭、轉身面向鏡頭，
+// 翅膀則在頂點著色器裡繞肩膀擺動。平常停在目前這座島外的海面上（全景時在右下角），說話時才飛到畫面右側。
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/GLTFLoader.js';
 
@@ -37,8 +37,6 @@ export function createQChick(scene, { camera, controls }) {
   const wing = { value: 0 };
   const goal = new THREE.Vector3();
   const vel = new THREE.Vector3();
-  const right = new THREE.Vector3();
-  const up = new THREE.Vector3();
   const pull = new THREE.Vector3();
   const anchor = new THREE.Vector3();
   let mesh = null;
@@ -58,16 +56,17 @@ export function createQChick(scene, { camera, controls }) {
     root.visible = true;
   }, undefined, () => { /* 載不到就只留對話框的 2D 頭像 */ });
 
+  // 說話時停在畫面右側中間（對話框在下方）；全景閒著時退到右下角、選單按鈕上方，不擋島和名牌。
+  // 用螢幕座標算位置（NDC，-1～1），放在鏡頭到視線中心距離的 NEAR 倍處，手機直式也不會跑出畫面
+  const NEAR = 0.55;
+  const SPOT_TALK = new THREE.Vector2(0.7, 0.1);
+  const SPOT_IDLE = new THREE.Vector2(0.86, -0.62);
+  const ndc = new THREE.Vector3();
   function aim(dist, size) {
     if (speaking || !hasAnchor) {
-      // 說話時、或還沒登島時，停在畫面右上方。依視窗比例算，手機直式也不會跑出畫面
-      const halfH = dist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
-      right.setFromMatrixColumn(camera.matrixWorld, 0);
-      up.setFromMatrixColumn(camera.matrixWorld, 1);
-      goal.copy(controls.target)
-        .addScaledVector(right, halfH * camera.aspect * 0.66)
-        .addScaledVector(up, halfH * 0.6);
-      goal.y = Math.max(goal.y, 2);
+      const spot = speaking ? SPOT_TALK : SPOT_IDLE;
+      ndc.set(spot.x, spot.y, 0.5).unproject(camera).sub(camera.position).normalize();
+      goal.copy(camera.position).addScaledVector(ndc, dist * NEAR);
     } else {
       goal.copy(anchor).setY(anchor.y + size * 1.1);
     }
@@ -76,7 +75,7 @@ export function createQChick(scene, { camera, controls }) {
   return {
     /** 到某座島的島邊待命。 */
     moveTo(center, radius) {
-      anchor.set(center.x + radius * 0.72, 3, center.z + radius * 0.72);
+      anchor.set(center.x + radius * 0.85, 3, center.z + radius * 0.85); // 島外的海面上，不擋建築
       hasAnchor = true;
     },
     leave() { hasAnchor = false; },
@@ -105,7 +104,9 @@ export function createQChick(scene, { camera, controls }) {
         vel.multiplyScalar(Math.exp(-DAMP * dt));
         root.position.addScaledVector(vel, dt);
       }
-      root.scale.setScalar(THREE.MathUtils.damp(root.scale.x, speaking ? size * 1.3 : size, 6, dt));
+      // 在畫面角落時離鏡頭比較近，縮小才會和在島邊時看起來差不多大
+      const want = speaking ? size * NEAR * 1.3 : hasAnchor ? size : size * NEAR * 0.75;
+      root.scale.setScalar(THREE.MathUtils.damp(root.scale.x, want, 6, dt));
 
       const speed = vel.length();
       const moving = THREE.MathUtils.clamp(speed / 12, 0, 1);

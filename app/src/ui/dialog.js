@@ -31,7 +31,7 @@ export function createDialog({ onOpen, onClose }) {
    * keep：按了不關框（送出表單時用）。extra：放在台詞下面的元素（例如寫心得的表單）。
    * 回傳這次的按鈕，方便表單依內容啟用「送出」。
    */
-  function say({ face, text, options = [], name = '太平Q雞', faceUrl, onDismiss, extra }) {
+  function say({ face, text, options = [], name = '太平G米花', faceUrl, onDismiss, extra }) {
     finishTyping();
     full = text;
     closer = onDismiss || null;

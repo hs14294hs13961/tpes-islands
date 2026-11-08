@@ -143,7 +143,7 @@ const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.
 // 教職員、太平Q喵、藏在島上的彩蛋
 const qcat = createQCat(scene, { camera });
 const isNight = () => (env.mode === 'live' ? liveMode() : env.mode) === 'night';
-const eggMarkers = createEggMarkers(scene, world.clusters, { isFound: (id) => eggs.found(id), isNight });
+const eggMarkers = createEggMarkers(scene, world.clusters, { isFound: (id) => eggs.found(id), isNight, renderer });
 // 小遊戲在群島頁面上全螢幕打開；開著的時候群島先停止繪圖，收起來再補跳彩蛋卡
 const games = createGameOverlay({ mapUrl: SCHOOL.mapUrl, onClose: () => eggs.checkNew() });
 const staff = createStaffTalk({ dialog, eggs, qcat, reading, clusters: world.clusters, mapUrl: SCHOOL.mapUrl, pick, playGame: games.open });
