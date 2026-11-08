@@ -18,6 +18,7 @@ import { createQCat } from './scene/qcat.js';
 import { createEggMarkers } from './scene/eggMarkers.js';
 import { createEggs } from './ui/eggs.js';
 import { createStaffTalk } from './ui/staffTalk.js';
+import { createGameOverlay } from './ui/gameOverlay.js';
 import { loadSocial } from './data/social.js';
 import { liveMode } from './scene/env.js';
 import { GLOW } from './scene/kit.js';
@@ -143,7 +144,9 @@ const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.
 const qcat = createQCat(scene, { camera });
 const isNight = () => (env.mode === 'live' ? liveMode() : env.mode) === 'night';
 const eggMarkers = createEggMarkers(scene, world.clusters, { isFound: (id) => eggs.found(id), isNight });
-const staff = createStaffTalk({ dialog, eggs, qcat, reading, clusters: world.clusters, mapUrl: SCHOOL.mapUrl, pick });
+// 小遊戲在群島頁面上全螢幕打開；開著的時候群島先停止繪圖，收起來再補跳彩蛋卡
+const games = createGameOverlay({ mapUrl: SCHOOL.mapUrl, onClose: () => eggs.checkNew() });
+const staff = createStaffTalk({ dialog, eggs, qcat, reading, clusters: world.clusters, mapUrl: SCHOOL.mapUrl, pick, playGame: games.open });
 onTileOpen = (tile) => staff.openedTile(tile);
 let social = { comments: {}, reflections: [] };
 loadSocial().then((s) => { social = s; });
@@ -201,7 +204,7 @@ const viewerEl = document.getElementById('viewer');
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
-  if (!viewerEl.hidden) return; // 看成果時 3D 先停，手機才不會同時撐兩邊
+  if (!viewerEl.hidden || games.isOpen) return; // 看成果、玩小遊戲時 3D 先停，手機才不會同時撐兩邊
   if (!paused) simTime += dt;
 
   if (fly) {

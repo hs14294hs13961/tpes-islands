@@ -345,3 +345,7 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
   .plate-name { font-size: 14px; }
   .tile-chip { font-size: 11px; }
 }
+
+/* 3D 校園小遊戲：蓋住整個群島畫面的全螢幕框 */
+.game-overlay { position: fixed; inset: 0; z-index: 100; background: #cfe3ec; }
+.game-overlay iframe { display: block; width: 100%; height: 100%; border: 0; }

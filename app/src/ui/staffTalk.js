@@ -6,7 +6,7 @@ import { createCompose } from './compose.js';
 
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
 
-export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl, pick }) {
+export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl, pick, playGame }) {
   const month = () => reading.months[reading.current];
   // 太平Q喵的捉迷藏：躲在本島、校園島或班級島的某一格
   const hideouts = clusters.filter((c) => c.id === 'hub' || c.id === 'campus' || c.kind === 'class');
@@ -33,11 +33,11 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
       text += eggs.found('uncle-toolbox')
         ? '上次多虧你幫忙！落葉又掉了一地，要再來一場嗎？'
         : '落葉又掉滿地了，可以到 3D 校園幫我用吹葉機清乾淨嗎？小心別撞到在玩的孩子喔！';
-      options.push({ label: '去 3D 校園幫忙 ↗', run: () => openGame('leaves') });
+      options.push({ label: '去 3D 校園幫忙', run: () => openGame('leaves') });
     }
     if (acts.includes('relay')) {
       text += '要不要到 3D 校園挑戰一場接力賽？跑得快之外，接棒的時機最重要！';
-      options.push({ label: '去 3D 校園比賽 ↗', run: () => openGame('relay') });
+      options.push({ label: '去 3D 校園比賽', run: () => openGame('relay') });
     }
     if (acts.includes('reflect') && month()?.articles?.some((a) => a.url)) {
       text += `這個月的得報選了 ${month().articles.length} 篇好文章，我幫你抽一篇，讀完寫 30～50 字的心得給我好嗎？`;
@@ -51,8 +51,10 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
     speak(text, options);
   }
 
+  // 在群島頁面上全螢幕開遊戲（ui/gameOverlay.js）；沒有的話才開新分頁
   function openGame(game) {
-    window.open(`${mapUrl}?game=${game}&from=islands`, '_blank', 'noopener');
+    if (playGame) playGame(game);
+    else window.open(`${mapUrl}?game=${game}&from=islands`, '_blank', 'noopener');
   }
 
   // ── 校長：找太平Q喵 ────────────────────────────────────
