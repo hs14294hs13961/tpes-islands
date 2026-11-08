@@ -80,7 +80,11 @@ export function createQCat(scene, { camera }) {
   let parts = makeCat();
   root.add(parts.cat);
   root.scale.setScalar(0.85); // 跟島上的小人差不多高的一半，躲起來才像貓
-  const hitMeshes = () => { const list = []; root.traverse((o) => { if (o.isMesh) list.push(o); }); return list; };
+  // 看不見、比貓大一圈的點擊範圍：貓在跑的時候也點得到（小朋友用平板點）
+  const hitBox = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
+  hitBox.position.y = 0.6;
+  root.add(hitBox);
+  const hitMeshes = () => [hitBox];
 
   if (MODEL) {
     new GLTFLoader().load(MODEL, (gltf) => {
@@ -177,8 +181,8 @@ export function createQCat(scene, { camera }) {
       let speed = 0;
       if (!calm && eating <= 0) {
         run -= dt;
-        if (run < -1.4 - Math.random() * 0.6) { run = 1.8 + Math.random() * 2; if (Math.random() < 0.4) dir = -dir; }
-        if (run > 0) speed = 0.65; // 約每秒 2 公尺，點得到
+        if (run < -2.2 - Math.random() * 1.2) { run = 1.5 + Math.random() * 1.5; if (Math.random() < 0.4) dir = -dir; }
+        if (run > 0) speed = 0.45; // 約每秒 1.4 公尺，點得到
       }
       ang += dir * speed * dt;
       const r = RING * Math.min(1, pop * 1.3);
