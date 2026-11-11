@@ -5,6 +5,8 @@ export const LINES = {
   opening: { face: 'wave', text: '歡迎來到太平群島！我是太平G米花。太平國小孩子們的學習成果都在這裡，想從哪裡開始？' },
   welcomeBack: { face: 'happy', text: '歡迎回來！想看什麼，點我一下就好。' },
   menu: { face: 'happy', text: '有什麼我可以幫忙的嗎？' },
+  games: { face: 'happy', text: '想玩哪一個？過關就能拿到一顆彩蛋！' },
+  gameCat: { face: 'think', text: '校長在太平本島的校長室附近。拉近一點，點她的名牌「聊聊」，她會請你幫忙找太平Q喵。' },
   pickClass: { face: 'think', text: '每一屆都有自己的島，想看哪一班的作品？' },
   exploreFree: { face: 'happy', text: '好的！拖曳畫面可以移動，兩根手指（滑鼠用右鍵）可以轉方向和放大。點島名或格子就能飛過去，需要我的時候點我一下。' },
   quietOn: { face: 'think', text: '好，我先安靜。還是可以隨時點我。' },

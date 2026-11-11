@@ -20,6 +20,7 @@ import { createEggs } from './ui/eggs.js';
 import { createStaffTalk } from './ui/staffTalk.js';
 import { createGameOverlay } from './ui/gameOverlay.js';
 import { loadSocial } from './data/social.js';
+import { createMusic } from './audio/music.js';
 import { liveMode } from './scene/env.js';
 import { GLOW } from './scene/kit.js';
 
@@ -106,7 +107,7 @@ function pick({ cluster, tile }) {
 // 導覽用：鏡頭飛到島上，但不打開資訊卡
 function focus(cluster) {
   flyTo(cluster.center.clone().setY(1), cluster.small ? 40 : cluster.radius * 3.2 + 20, 0.9);
-  qchick.moveTo();
+  qchick.moveTo(cluster.center, cluster.radius);
 }
 
 // ── 介面 ─────────────────────────────────────────────
@@ -141,10 +142,16 @@ const hud = createHud({
   },
 });
 
-const qchick = createQChick({ camera });
+const qchick = createQChick(scene, { camera, controls });
 const dialog = createDialog({ onOpen: () => qchick.speak(true), onClose: () => qchick.speak(false) });
-const eggs = createEggs({ onFound: () => qchick.hop() });
-const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.clusters, pick, focus, goHome, eggs });
+// 背景音樂（校歌音樂盒版）：第一次點畫面才開始；下方「音樂」鍵可以關，會記住
+const music = createMusic();
+const musicBtn = document.getElementById('btn-music');
+const showMusic = () => { musicBtn.classList.toggle('on', music.on); musicBtn.setAttribute('aria-pressed', String(music.on)); };
+musicBtn.addEventListener('click', () => { music.toggle(); showMusic(); });
+showMusic();
+const eggs = createEggs({ onFound: () => { qchick.hop(); music.chime(); } });
+const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.clusters, pick, focus, goHome, eggs, playGame: (g) => games.open(g) });
 
 // 教職員、太平Q喵、藏在島上的彩蛋
 const qcat = createQCat(scene, { camera });
@@ -181,7 +188,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
   ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
-  if (qchick.hit(ndc)) { guide.menu(); return; }
+  if (qchick.hit(ray)) { guide.menu(); return; }
   if (qcat.hit(ray)) { staff.meetCat(); return; }
   const egg = eggMarkers.hit(ray);
   if (egg) { eggs.unlock(egg); return; }
@@ -210,6 +217,7 @@ const viewerEl = document.getElementById('viewer');
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
+  music.pause(!viewerEl.hidden); // 看作品時（可能有影片）音樂先停
   if (!viewerEl.hidden || games.isOpen) return; // 看成果、玩小遊戲時 3D 先停，手機才不會同時撐兩邊
   if (!paused) simTime += dt;
 
@@ -241,7 +249,6 @@ renderer.setAnimationLoop(() => {
   labels.update(camera, showNames, people.tags);
 
   renderer.render(scene, camera);
-  qchick.render(renderer);
   labelRenderer.render(scene, camera);
 });
 

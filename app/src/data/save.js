@@ -39,6 +39,17 @@ export const save = {
     write();
     return true;
   },
+  /** 記一筆會變的資料（例如找Q喵找到哪一步）；value 要能轉成 JSON。 */
+  set(key, value) {
+    state.slots[state.slot][key] = value;
+    write();
+  },
+  get: (key) => state.slots[state.slot][key],
+  drop(key) {
+    if (!(key in state.slots[state.slot])) return;
+    delete state.slots[state.slot][key];
+    write();
+  },
   /** 某一格裡有幾件以 prefix 開頭的事（例如逛過幾座島）。 */
   count: (prefix, slot = state.slot) => Object.keys(state.slots[slot]).filter((e) => e.startsWith(prefix)).length,
   slot: () => state.slot,

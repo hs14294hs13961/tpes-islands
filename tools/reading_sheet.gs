@@ -284,10 +284,15 @@ function uploadFile_(f) {
 // 網站上的「給孩子留言」（成果預覽視窗）與「得報心得」（五甲黃薇老師）都送到這裡。
 // 不收姓名，只選身分。自動判斷：
 //   有負面詞、或有電話／網址等個資 → 待審，寄信通知
-//   有正面詞、沒有負面詞 → 直接通過
+//   有正面詞、沒有負面詞 → 直接通過（只有 REVIEW_ALL 設成 false 時才會；現在一律先審）
 //   看不出來 → 待審，寄信通知
 // 審核：到「留言審核」分頁把「狀態」改成「通過」或「不通過」，網站一分鐘內更新。
 // 通知信寄給部署這支程式的帳號；要改寄別人，在指令碼屬性加 NOTIFY_EMAIL。
+
+// 一律先審核：留言裡可能寫到孩子的全名（「王小明畫得好棒」），電腦分不出來，所以全部等老師看過才公開。
+// 自動判斷的結果還是會寫在「原因」欄，給審核的人參考。之後想恢復「正面的直接公開」，改成 false 再重新部署。
+const REVIEW_ALL = true;
+const NOTIFY_EVERY_MIN = 30; // 通知信最多半小時寄一封，免得留言多的時候信箱被灌爆
 
 const SOCIAL_SHEET = '留言審核';
 const SOCIAL_HEAD = ['時間', '類型', '對象編號', '對象標題', '身分', '內容', '狀態', '原因'];
@@ -351,7 +356,9 @@ function postSocial_(req) {
   const dupKey = `dup-${Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, target + text))}`;
   if (cache.get(dupKey)) throw new Error('這則已經送過了');
 
-  const { status, reason } = judge_(text);
+  const guess = judge_(text);
+  const status = REVIEW_ALL ? '待審' : guess.status;
+  const reason = REVIEW_ALL && guess.status === '通過' ? `${guess.reason}（電腦判斷沒問題，請確認沒有孩子的全名）` : guess.reason;
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -379,15 +386,20 @@ function postSocial_(req) {
 
 function notify_(kind, req, text, reason) {
   try {
+    // 半小時內寄過就不再寄：信裡請對方到分頁看全部待審的
+    const cache = CacheService.getScriptCache();
+    if (cache.get('notify-hold')) return;
     const to = PropertiesService.getScriptProperties().getProperty('NOTIFY_EMAIL') || Session.getEffectiveUser().getEmail();
     if (!to) return;
     const url = SpreadsheetApp.getActiveSpreadsheet().getUrl();
     MailApp.sendEmail({
       to,
-      subject: `【太平群島】有一則${kind === 'comment' ? '留言' : '得報心得'}等你審核`,
-      body: `對象：${req.title || req.target}\n身分：${req.role}\n內容：${text}\n判斷：${reason}\n\n`
-        + `到「${SOCIAL_SHEET}」分頁把狀態改成「通過」或「不通過」：\n${url}`,
+      subject: `【太平群島】有${kind === 'comment' ? '留言' : '得報心得'}等你審核`,
+      body: `最新一則\n對象：${req.title || req.target}\n身分：${req.role}\n內容：${text}\n判斷：${reason}\n\n`
+        + `接下來 ${NOTIFY_EVERY_MIN} 分鐘內的新留言不會再另外寄信，請到「${SOCIAL_SHEET}」分頁看全部「待審」的，`
+        + `把狀態改成「通過」或「不通過」：\n${url}`,
     });
+    cache.put('notify-hold', '1', NOTIFY_EVERY_MIN * 60);
   } catch (err) { /* 寄信額度用完也不能讓留言失敗 */ }
 }
 

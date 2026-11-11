@@ -3,6 +3,7 @@
 import { STAFF, ROLE_LINES, homeroom } from '../data/staff.js';
 import { postSocial } from '../data/social.js';
 import { createCompose } from './compose.js';
+import { save } from '../data/save.js';
 
 const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
 
@@ -10,7 +11,23 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
   const month = () => reading.months[reading.current];
   // 太平Q喵的捉迷藏：躲在本島、校園島或班級島的某一格
   const hideouts = clusters.filter((c) => c.id === 'hub' || c.id === 'campus' || c.kind === 'class');
-  const quest = { active: false, fed: false, cluster: null, tile: null, hints: 0 };
+  const quest = { active: false, fed: false, cluster: null, tile: null, hints: 0, out: false };
+  // 找到哪一步記在訪客進度裡（quest:cat），重新整理或下次再來可以接著找
+  const QUEST_KEY = 'quest:cat';
+  function keep() {
+    if (!quest.active) { save.drop(QUEST_KEY); return; }
+    save.set(QUEST_KEY, { cluster: quest.cluster.id, tile: quest.cluster.tiles.indexOf(quest.tile), hints: quest.hints, out: quest.out, fed: quest.fed });
+  }
+  (function restore() {
+    const s = save.get(QUEST_KEY);
+    const cluster = s && clusters.find((c) => c.id === s.cluster);
+    const tile = cluster?.tiles[s.tile];
+    if (!tile) { if (s) save.drop(QUEST_KEY); return; } // 島的配置改過，舊紀錄對不上就重來
+    Object.assign(quest, { active: true, cluster, tile, hints: Number(s.hints) || 0, out: !!s.out || !!s.fed, fed: !!s.fed });
+    qcat.hideAt(tile);
+    if (quest.out) qcat.reveal(tile);
+    if (quest.fed) qcat.settle();
+  })();
 
   function lineFor(person) {
     const { role, name } = person.info;
@@ -62,8 +79,9 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
   function startQuest(speak) {
     quest.cluster = pickOne(hideouts);
     quest.tile = pickOne(quest.cluster.tiles);
-    Object.assign(quest, { active: true, fed: false, hints: 0 });
+    Object.assign(quest, { active: true, fed: false, hints: 0, out: false });
     qcat.hideAt(quest.tile);
+    keep();
     hint(speak);
   }
 
@@ -73,8 +91,9 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
       `牠最喜歡躲在「${quest.tile.name}」裡面，點開那一格看看！`,
       '點開牠躲的那一格，牠就會從裡面跑出來，在建築旁邊跑來跑去。趁牠停下來的時候點牠一下！',
     ];
-    const text = lines[quest.hints];
+    const text = lines[Math.min(quest.hints, lines.length - 1)];
     quest.hints = Math.min(quest.hints + 1, lines.length);
+    keep();
     const left = lines.length - quest.hints;
     speak(text, [
       { label: '我去找找', run: () => pick({ cluster: quest.cluster }) },
@@ -86,6 +105,8 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
     if (quest.fed) {
       quest.active = false;
       quest.fed = false;
+      quest.out = false;
+      keep();
       const first = !eggs.found('principal-key');
       speak(first
         ? '你找到太平Q喵，還餵牠吃飽了！謝謝你。送你一顆我珍藏的彩蛋。'
@@ -114,6 +135,8 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
   /** 點開了某一格：太平Q喵躲在這裡就跑出來，回傳有沒有找到。 */
   function openedTile(tile) {
     if (!quest.active || quest.fed || !qcat.reveal(tile)) return false;
+    quest.out = true;
+    keep();
     dialog.say({
       text: `喵！（有個淺黃色的影子從「${tile.name}」裡衝出來，在建築旁邊跑來跑去！）`,
       name: '太平Q喵',
@@ -135,6 +158,7 @@ export function createStaffTalk({ dialog, eggs, qcat, reading, clusters, mapUrl,
         label: '餵牠吃貓糧',
         run: () => qcat.feed().then(() => {
           quest.fed = true;
+          keep();
           speak('喵嗚～（Q喵吃得好開心，用頭蹭了蹭你）。快回去告訴校長吧！', [{ label: '好！' }]);
         }),
       },

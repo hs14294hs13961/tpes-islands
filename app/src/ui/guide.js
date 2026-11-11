@@ -5,7 +5,7 @@ import { readingRecords } from '../data/reading.js';
 import { LINES, HELP, TOUR, islandIntro } from '../data/qchickLines.js';
 import { EGGS } from '../data/eggs.js';
 
-export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick, focus, goHome, eggs }) {
+export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick, focus, goHome, eggs, playGame }) {
   const byId = (id) => clusters.find((c) => c.id === id);
   const month = () => reading.months[reading.current];
   const countOf = (cluster) => (cluster.id === 'reading' ? readingRecords(data, reading) : recordsFor(data, { cluster })).length;
@@ -111,11 +111,23 @@ export function createGuide({ dialog, qchick, hud, data, reading, clusters, pick
 
   // ── 選單與開場 ───────────────────────────────────────
 
+  // 小遊戲入口：原本要找到叔公、莊主任對話才進得去，這裡直接列出來。已經過關的打勾
+  function games() {
+    const done = (id) => (eggs.found(id) ? ' ✓' : '');
+    say(LINES.games, [
+      { label: `🍂 叔公的吹落葉${done('uncle-toolbox')}`, run: () => playGame('leaves') },
+      { label: `🏃 運動會接力賽${done('relay-baton')}`, run: () => playGame('relay') },
+      { label: `🐱 幫校長找太平Q喵${done('principal-key')}`, run: () => { pick({ cluster: byId('hub') }); say(LINES.gameCat); } },
+      { label: '先不玩' },
+    ]);
+  }
+
   function menu() {
     qchick.hop();
     say(LINES.menu, [
       { label: '看孩子的作品', run: chooseClass },
       { label: '跟我導覽', run: tour },
+      ...(playGame ? [{ label: '玩小遊戲', run: games }] : []),
       { label: `彩蛋圖鑑（${eggs.count()}/${EGGS.length}）`, run: () => eggs.book() },
       { label: '功能介紹', run: () => help() },
       { label: '回到全景', run: () => { hud.closeInfo(); qchick.leave(); goHome(); } },

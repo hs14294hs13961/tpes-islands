@@ -1,11 +1,13 @@
 // 太平Q喵：淺黃褐虎斑小貓，躲在某一格的設施裡；點開那一格才會跑出來，在建築外圍跑來跑去，點到牠可以餵貓糧。
-// 現在是程式拼的暫代貓；Higgsfield 3D 模型確認後放到 MODEL，就會自動換上。
+// 模型是照三視圖 v3 用 Higgsfield 轉的（原檔在 美術/吉祥物/Q喵/太平Q喵_3D_v1.glb，貼圖縮成 1024 後放進網站）。
+// 模型沒有骨架，動作用程式做（跳著跑、低頭吃、歪頭）；下載前或讀不到時，先用程式拼的暫代貓。
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/CSS2DRenderer.js';
 import { GLTFLoader } from 'three/addons/GLTFLoader.js';
 import { TOP } from './kit.js';
 
-const MODEL = null; // 例：'./public/models/qcat.glb'
+const MODEL = './public/models/qcat.glb';
+const MODEL_TALL = 1.2; // 模型放進場景後的身高（公尺），和暫代貓差不多
 const SHOW_WITHIN = 75;
 // 配色照學校那隻真貓（美術/參考/貓咪）：淺黃褐色虎斑、奶油白胸口和腳掌、黑尾尖
 const GREY = 0xc9a874; // 身體底色（淺黃褐）
@@ -91,6 +93,11 @@ export function createQCat(scene, { camera }) {
       root.remove(parts.cat);
       const cat = new THREE.Group();
       const body = new THREE.Group();
+      // 模型原點在身體正中間、大小不一定：量一下，縮到固定身高、腳底貼地
+      const box = new THREE.Box3().setFromObject(gltf.scene);
+      const k = MODEL_TALL / (box.max.y - box.min.y);
+      gltf.scene.scale.setScalar(k);
+      gltf.scene.position.set(-(box.min.x + box.max.x) / 2 * k, -box.min.y * k, -(box.min.z + box.max.z) / 2 * k);
       body.add(gltf.scene);
       cat.add(body);
       gltf.scene.traverse((o) => { if (o.isMesh) o.castShadow = true; });
@@ -144,6 +151,11 @@ export function createQCat(scene, { camera }) {
       return true;
     },
     get hiding() { return !!home && !out; },
+    /** 讀檔用：上次已經餵飽了，直接乖乖待在碗旁邊。 */
+    settle() {
+      calm = true;
+      bowl.visible = true;
+    },
     leave() {
       home = null;
       out = false;
@@ -171,7 +183,9 @@ export function createQCat(scene, { camera }) {
       }, 2800));
     },
     update(dt, t) {
-      root.visible = out && camera.position.distanceTo(root.getWorldPosition(tmp)) < SHOW_WITHIN;
+      // 距離要量到牠躲的那一格：牠自己的位置要等現身後才會更新，一開始停在世界原點，
+      // 拿來量的話，躲在離原點遠的島上就永遠不會出現
+      root.visible = out && !!home && camera.position.distanceTo(tmp.set(home.pos.x, TOP, home.pos.z)) < SHOW_WITHIN;
       if (!root.visible) return;
       // 從建築裡彈出來
       pop = Math.min(1, pop + dt * 2.5);
