@@ -29,6 +29,26 @@
     <img src="./public/qchick/wave.png" alt="" aria-hidden="true">
     <p>太平群島正在浮出海面…</p>
   </div>
+  <script>
+    // 3D 載不起來（裝置太舊不支援、網路中斷）時，別讓人一直看著「正在浮出海面」
+    (function () {
+      function fail() {
+        var box = document.getElementById('loading');
+        if (!box || box.classList.contains('done') || box.dataset.failed) return;
+        box.dataset.failed = '1';
+        box.querySelector('p').textContent = '島嶼沒有順利浮上來。請檢查網路後重新整理；如果還是不行，可能是這台裝置的瀏覽器太舊。';
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'q-opt primary';
+        b.textContent = '重新整理';
+        b.onclick = function () { location.reload(); };
+        box.appendChild(b);
+      }
+      addEventListener('error', function (e) { if (!e.target || e.target === window || e.target.tagName === 'SCRIPT') fail(); }, true);
+      addEventListener('unhandledrejection', fail);
+      setTimeout(fail, 30000);
+    })();
+  </script>
 
   <header class="top">
     <div class="card brand">
@@ -71,7 +91,7 @@
       <p class="viewer-desc" id="viewer-desc"></p>
       <div class="viewer-body" id="viewer-body"></div>
       <section class="talk" id="talk" hidden>
-        <button type="button" class="talk-toggle" id="talk-toggle" aria-expanded="false" aria-controls="talk-panel">給孩子留言<span id="talk-count"></span></button>
+        <button type="button" class="talk-toggle" id="talk-toggle" aria-expanded="false" aria-controls="talk-panel"><span class="talk-icon" aria-hidden="true">💬</span><span class="talk-label">留言鼓勵孩子<span id="talk-count"></span></span><span class="talk-hint">點這裡寫一句話</span></button>
         <div class="talk-panel" id="talk-panel" hidden>
           <ul class="talk-list" id="talk-list" hidden></ul>
           <div id="talk-compose"></div>

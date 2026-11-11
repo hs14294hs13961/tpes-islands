@@ -32,6 +32,8 @@ export async function postSocial({ action, target, title, role, text }) {
   } catch {
     throw new Error('送不出去，請檢查網路後再試一次');
   }
+  // 學校端的程式還是舊版時，會把留言當成「上傳檔案」而回密碼錯誤：留言本來就不用密碼，改說人話
+  if (!json.ok && /密碼/.test(json.error || '')) throw new Error('留言功能還在準備中，請過幾天再來留言。');
   if (!json.ok) throw new Error(json.error || '送出失敗');
   if (json.status === 'published') at = 0; // 下次重新讀，自己的留言才看得到
   return json.status;

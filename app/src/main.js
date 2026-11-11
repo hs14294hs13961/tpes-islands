@@ -47,6 +47,12 @@ controls.minDistance = 22;
 controls.maxDistance = 380;
 controls.maxPolarAngle = 1.25;
 controls.screenSpacePanning = false;
+// 操作像地圖：一根手指（滑鼠左鍵）拖曳＝移動位置，兩根手指（滑鼠右鍵、或按住 Shift 拖曳）＝轉方向，
+// 滾輪或兩指縮放會朝游標的位置拉近。原本拖曳只能轉方向，卡在一個地方就很難移到別的島。
+controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+controls.zoomToCursor = true;
+controls.panSpeed = 1.15;
 
 const [data, reading] = await Promise.all([loadData(), loadReading()]);
 reading.recordCount = readingRecords(data, reading).length;
@@ -100,7 +106,7 @@ function pick({ cluster, tile }) {
 // 導覽用：鏡頭飛到島上，但不打開資訊卡
 function focus(cluster) {
   flyTo(cluster.center.clone().setY(1), cluster.small ? 40 : cluster.radius * 3.2 + 20, 0.9);
-  qchick.moveTo(cluster.center, cluster.radius);
+  qchick.moveTo();
 }
 
 // ── 介面 ─────────────────────────────────────────────
@@ -135,7 +141,7 @@ const hud = createHud({
   },
 });
 
-const qchick = createQChick(scene, { camera, controls });
+const qchick = createQChick({ camera });
 const dialog = createDialog({ onOpen: () => qchick.speak(true), onClose: () => qchick.speak(false) });
 const eggs = createEggs({ onFound: () => qchick.hop() });
 const guide = createGuide({ dialog, qchick, hud, data, reading, clusters: world.clusters, pick, focus, goHome, eggs });
@@ -166,7 +172,7 @@ function birdOff() {
   document.getElementById('btn-bird').classList.remove('on');
 }
 
-// 點地面也能選格子（拖曳轉視角時不算點擊）
+// 點地面也能選格子（拖曳移動時不算點擊）
 const ray = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let down = null;
@@ -175,7 +181,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
   ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
-  if (qchick.hit(ray)) { guide.menu(); return; }
+  if (qchick.hit(ndc)) { guide.menu(); return; }
   if (qcat.hit(ray)) { staff.meetCat(); return; }
   const egg = eggMarkers.hit(ray);
   if (egg) { eggs.unlock(egg); return; }
@@ -217,8 +223,12 @@ renderer.setAnimationLoop(() => {
       if (!document.getElementById('btn-bird').classList.contains('on')) controls.minPolarAngle = 0.15;
     }
   }
-  controls.target.x = THREE.MathUtils.clamp(controls.target.x, -110, 110);
-  controls.target.z = THREE.MathUtils.clamp(controls.target.z, -100, 100);
+  // 不能移出群島範圍；鏡頭跟著一起退回來，視角才不會在邊界被擠歪
+  const tx = THREE.MathUtils.clamp(controls.target.x, -110, 110), tz = THREE.MathUtils.clamp(controls.target.z, -100, 100);
+  camera.position.x += tx - controls.target.x;
+  camera.position.z += tz - controls.target.z;
+  controls.target.x = tx;
+  controls.target.z = tz;
   controls.update();
 
   env.update(dt, simTime);
@@ -231,6 +241,7 @@ renderer.setAnimationLoop(() => {
   labels.update(camera, showNames, people.tags);
 
   renderer.render(scene, camera);
+  qchick.render(renderer);
   labelRenderer.render(scene, camera);
 });
 

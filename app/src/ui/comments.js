@@ -45,7 +45,10 @@ export function createComments() {
   $('talk-toggle').addEventListener('click', () => {
     panel.hidden = !panel.hidden;
     $('talk-toggle').setAttribute('aria-expanded', String(!panel.hidden));
-    if (!panel.hidden) compose.focus();
+    if (!panel.hidden) {
+      compose.focus();
+      panel.scrollIntoView({ block: 'nearest' });
+    }
   });
 
   send.addEventListener('click', async () => {
@@ -73,6 +76,8 @@ export function createComments() {
       panel.hidden = true;
       $('talk-toggle').setAttribute('aria-expanded', 'false');
       note.textContent = '';
+      compose.reset(true); // 上一件作品打到一半的字和身分不要留到這一件
+      send.textContent = '送出留言';
       render([]);
       refresh(false);
     },

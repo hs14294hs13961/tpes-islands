@@ -231,6 +231,51 @@ export function mergeTails(root) {
   else pos.needsUpdate = true;
 }
 
+// 走路時大腿往後擺，原本屁股的皮膚跟著大腿轉，左右兩半就一上一下錯開（從背後拉近看很嚇人）。
+// 把髖關節附近和以上的皮膚改成跟著骨盆，往下一小段再慢慢交還給大腿；背面的屁股比正面的大腿根低，所以背面多留一點。
+const HIP_BAND = 0.3; // 交接區的長度，佔大腿長度的比例
+export function firmHips(root) {
+  root.updateMatrixWorld(true);
+  let mesh;
+  root.traverse((o) => { if (o.isSkinnedMesh) mesh = o; });
+  const bones = mesh.skeleton.bones;
+  const hips = bones.findIndex((b) => b.name === 'Hips');
+  const legs = ['LeftUpLeg', 'RightUpLeg'].map((n) => bones.findIndex((b) => b.name === n));
+  if (hips < 0 || legs.includes(-1)) return;
+  const joint = boneAt(root, 'LeftUpLeg'), knee = boneAt(root, 'LeftLeg');
+  const band = (joint.y - knee.y) * HIP_BAND;
+  const { skinIndex: si, skinWeight: sw } = mesh.geometry.attributes;
+  const get = ['getX', 'getY', 'getZ', 'getW'], set = ['setX', 'setY', 'setZ', 'setW'];
+  const v = new THREE.Vector3();
+  for (let i = 0; i < si.count; i++) {
+    mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld);
+    const top = joint.y - (v.z < joint.z ? band * 0.6 : 0); // 這個高度以上完全跟著骨盆
+    const f = 1 - THREE.MathUtils.smoothstep(top - v.y, 0, band);
+    if (f <= 0) continue;
+    const idx = get.map((g) => si[g](i)), w = get.map((g) => sw[g](i));
+    let moved = 0;
+    for (let k = 0; k < 4; k++) {
+      if (!legs.includes(idx[k]) || w[k] <= 0) continue;
+      moved += w[k] * f;
+      w[k] *= 1 - f;
+    }
+    if (moved <= 0) continue;
+    let slot = idx.findIndex((b, k) => b === hips && w[k] > 0);
+    if (slot < 0) slot = w.indexOf(Math.min(...w)); // 沒有骨盆的欄位：借用份量最小的那一格
+    if (idx[slot] !== hips) { idx[slot] = hips; w[slot] = 0; }
+    w[slot] += moved;
+    const sum = w[0] + w[1] + w[2] + w[3];
+    for (let k = 0; k < 4; k++) {
+      si[set[k]](i, idx[k]);
+      sw[set[k]](i, w[k] / sum);
+    }
+  }
+  for (const a of [si, sw]) {
+    if (a.isInterleavedBufferAttribute) a.data.needsUpdate = true;
+    else a.needsUpdate = true;
+  }
+}
+
 // 模型的站姿手臂張開約 60 度（A 字），站著不動時很僵硬，往下收一點比較自然。
 // 原本的站姿記在 userData.rest0，套走路動作時要用原本的站姿算差值。單位：弧度
 const ARM_DOWN = 0.26;
@@ -329,6 +374,7 @@ export async function loadCharacters(onReady) {
       const gltf = await loader.loadAsync(BASE + def.file);
       if (def.logo && images[def.logo]) bakeLogo(gltf.scene, images[def.logo], LOGOS[def.logo], def);
       if (def.oneTail) mergeTails(gltf.scene);
+      firmHips(gltf.scene);
       lowerArms(gltf.scene);
       const walk = retargetWalk((source || gltf).animations[0], (source || gltf).scene, gltf.scene);
       gltf.scene.traverse((o) => {

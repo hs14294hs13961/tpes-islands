@@ -37,7 +37,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--paper); transition: opacity .8s ease .2s, visibility 0s 1s;
 }
 .loading img { width: 96px; border-radius: 50%; animation: bob 1.6s ease-in-out infinite; }
-.loading p { margin: 0; color: var(--primary); font-weight: 600; letter-spacing: .05em; }
+.loading p { margin: 0; color: var(--primary); font-weight: 600; letter-spacing: .05em; max-width: 22em; padding: 0 20px; text-align: center; line-height: 1.6; }
 .loading.done { opacity: 0; visibility: hidden; }
 @keyframes bob { 50% { transform: translateY(-8px); } }
 
@@ -260,14 +260,19 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
 /* 成果預覽下方的留言 */
 .talk { flex: none; margin-top: 10px; }
 .talk[hidden] { display: none; }
-.talk-toggle { border: 0; background: none; padding: 4px 0; font: inherit; font-size: 14px; font-weight: 700; color: var(--primary); cursor: pointer; }
-.talk-toggle::before { content: '＋ '; }
-.talk-toggle[aria-expanded="true"]::before { content: '－ '; }
-.talk-panel { display: grid; gap: 8px; max-height: 42dvh; overflow-y: auto; padding-top: 4px; }
+.talk-toggle { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 46px; padding: 8px 14px; border: 2px solid var(--primary); border-radius: 12px; background: #fff; font: inherit; font-size: 15px; font-weight: 700; color: var(--primary); cursor: pointer; text-align: left; }
+.talk-toggle:hover { background: var(--paper); }
+.talk-icon { font-size: 18px; }
+.talk-label { flex: 1; }
+.talk-hint { font-size: 12px; font-weight: 600; opacity: .75; }
+.talk-hint::after { content: ' ▾'; }
+.talk-toggle[aria-expanded="true"] { border-bottom-left-radius: 0; border-bottom-right-radius: 0; background: var(--primary); color: #fff; }
+.talk-toggle[aria-expanded="true"] .talk-hint { visibility: hidden; }
+.talk-panel { display: grid; gap: 8px; max-height: 42dvh; overflow-y: auto; padding: 10px 12px 12px; border: 2px solid var(--primary); border-top: 0; border-radius: 0 0 12px 12px; background: #fff; }
 .talk-panel[hidden] { display: none; }
 .talk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .talk-list[hidden] { display: none; }
-.talk-list li { padding: 8px 10px; border-radius: 10px; background: #fff; font-size: 14px; line-height: 1.5; }
+.talk-list li { padding: 8px 10px; border-radius: 10px; background: var(--paper); font-size: 14px; line-height: 1.5; }
 .talk-who { display: block; font-size: 11px; font-weight: 700; color: var(--primary); }
 .talk-foot { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
 .talk-note { flex: 1; margin: 0; font-size: 13px; color: var(--muted); }
@@ -307,6 +312,15 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
 .egg-btns { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
 .egg-book-title { margin: 0; font-size: 19px; }
 .egg-book-sub { margin: 4px 0 14px; font-size: 13px; color: var(--muted); }
+.egg-keep { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--paper); text-align: left; }
+.egg-keep-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--primary); }
+.egg-code { margin: 4px 0; font-size: 26px; font-weight: 800; letter-spacing: .12em; font-variant-numeric: tabular-nums; user-select: all; }
+.egg-keep-note { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.egg-keep-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.egg-keep-form input { flex: 1; min-width: 130px; min-height: 40px; box-sizing: border-box; padding: 6px 12px; border: 1px solid var(--line); border-radius: 12px; font: inherit; font-size: 16px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: #fff; color: inherit; }
+.egg-keep-form input::placeholder { font-weight: 400; letter-spacing: 0; }
+.egg-keep-msg { flex-basis: 100%; margin: 0; font-size: 13px; font-weight: 600; color: var(--primary); }
+.egg-keep-msg:empty { display: none; }
 .egg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
 .egg-cell { display: grid; justify-items: center; gap: 4px; padding: 12px 6px 10px; border: 1px solid var(--line); border-radius: 14px; background: #fff; color: inherit; font: inherit; cursor: pointer; }
 .egg-cell:disabled { cursor: default; background: rgba(255,255,255,.55); }
@@ -348,4 +362,5 @@ button.read-row:hover, button.read-row:focus-visible { border-color: #3f8f9e; ou
 
 /* 3D 校園小遊戲：蓋住整個群島畫面的全螢幕框 */
 .game-overlay { position: fixed; inset: 0; z-index: 100; background: #cfe3ec; }
+.game-rescue { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
 .game-overlay iframe { display: block; width: 100%; height: 100%; border: 0; }

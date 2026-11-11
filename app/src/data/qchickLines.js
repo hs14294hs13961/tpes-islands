@@ -6,7 +6,7 @@ export const LINES = {
   welcomeBack: { face: 'happy', text: '歡迎回來！想看什麼，點我一下就好。' },
   menu: { face: 'happy', text: '有什麼我可以幫忙的嗎？' },
   pickClass: { face: 'think', text: '每一屆都有自己的島，想看哪一班的作品？' },
-  exploreFree: { face: 'happy', text: '好的！拖曳畫面可以轉動，點島名或格子就能飛過去。需要我的時候，點我一下。' },
+  exploreFree: { face: 'happy', text: '好的！拖曳畫面可以移動，兩根手指（滑鼠用右鍵）可以轉方向和放大。點島名或格子就能飛過去，需要我的時候點我一下。' },
   quietOn: { face: 'think', text: '好，我先安靜。還是可以隨時點我。' },
   quietOff: { face: 'happy', text: '我回來了！之後到新的島，我會再幫你介紹。' },
   slots: { face: 'think', text: '共用平板的話，可以各選一格，進度就不會混在一起，也不用填名字。現在要用哪一格？' },

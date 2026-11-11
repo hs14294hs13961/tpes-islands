@@ -7,14 +7,19 @@ export function createGameOverlay({ mapUrl, onOpen, onClose }) {
 
   function close() {
     if (!box) return;
+    clearTimeout(rescue);
     box.remove();
     box = null;
     document.body.classList.remove('game-open');
     onClose?.();
   }
 
+  let ready = false;
+  let rescue = 0;
   addEventListener('message', (e) => {
-    if (e.origin === origin && e.data?.type === 'tpes-game' && e.data.action === 'close') close();
+    if (e.origin !== origin || e.data?.type !== 'tpes-game') return;
+    if (e.data.action === 'ready') ready = true;
+    if (e.data.action === 'close') close();
   });
 
   function open(game) {
@@ -29,6 +34,18 @@ export function createGameOverlay({ mapUrl, onOpen, onClose }) {
     box.append(frame);
     document.body.append(box);
     document.body.classList.add('game-open');
+    // 遊戲那邊 12 秒都沒回報「準備好了」（網路斷了、載入失敗）：遊戲裡的 ✕ 也出不來，這裡補一顆退路
+    ready = false;
+    clearTimeout(rescue);
+    rescue = setTimeout(() => {
+      if (!box || ready) return;
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'q-opt primary game-rescue';
+      back.textContent = '小遊戲沒有打開？回到群島';
+      back.addEventListener('click', close);
+      box.append(back);
+    }, 12000);
     onOpen?.();
   }
 

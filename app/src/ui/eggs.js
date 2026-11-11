@@ -1,7 +1,7 @@
 // 太平小彩蛋的卡片與圖鑑。找到的紀錄存在訪客進度（save.js）的 `egg:<id>`，
 // 跳過卡片的再記 `eggshown:<id>`：3D 校園小遊戲過關時只寫 egg:，回到群島才補跳卡片。
 import { save } from '../data/save.js';
-import { EGGS, HOW_LABEL } from '../data/eggs.js';
+import { EGGS, HOW_LABEL, eggCode, readEggCode } from '../data/eggs.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -70,7 +70,44 @@ export function createEggs({ onFound }) {
     ok.focus();
   }
 
-  function book() {
+  // 圖鑑最下面：我的彩蛋代碼（抄下來）＋輸入代碼拿回彩蛋。紀錄只在這台裝置上，代碼是唯一的備份。
+  function keeper(note = '') {
+    const box = el('div', 'egg-keep');
+    if (count()) {
+      box.append(el('p', 'egg-keep-title', '我的彩蛋代碼'), el('p', 'egg-code', eggCode(found)));
+      box.append(el('p', 'egg-keep-note', '把代碼抄下來！換一台平板、或是哪天紀錄不見了，在下面輸入代碼就能把彩蛋拿回來。每多找到一顆，代碼就會變。'));
+    } else {
+      box.append(el('p', 'egg-keep-title', '以前找過彩蛋嗎？'), el('p', 'egg-keep-note', '輸入你抄下來的彩蛋代碼，就能把彩蛋拿回來。'));
+    }
+    const form = el('form', 'egg-keep-form');
+    const input = el('input');
+    input.type = 'text';
+    input.maxLength = 9;
+    input.placeholder = '輸入彩蛋代碼';
+    input.autocomplete = 'off';
+    input.autocapitalize = 'characters';
+    input.spellcheck = false;
+    input.setAttribute('aria-label', '輸入彩蛋代碼');
+    const go = el('button', 'q-opt', '拿回彩蛋');
+    go.type = 'submit';
+    const msg = el('p', 'egg-keep-msg', note);
+    msg.setAttribute('aria-live', 'polite');
+    form.append(input, go, msg);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const list = readEggCode(input.value);
+      if (!list) { msg.textContent = '代碼不對喔，再對一次看看（一共 6 個字）。'; return; }
+      // 只會加、不會減：代碼裡沒有的彩蛋，這台裝置上原本拿到的照樣留著
+      const fresh = list.filter((egg) => save.mark(`egg:${egg.id}`));
+      list.forEach((egg) => save.mark(`eggshown:${egg.id}`));
+      if (fresh.length) onFound?.(fresh[0]);
+      book(fresh.length ? `拿回 ${fresh.length} 顆彩蛋了！` : '這些彩蛋你都已經有了。');
+    });
+    box.append(form);
+    return box;
+  }
+
+  function book(note) {
     const box = el('div', 'egg-book');
     box.append(el('h3', 'egg-book-title', `太平小彩蛋圖鑑　${count()}／${EGGS.length}`));
     box.append(el('p', 'egg-book-sub', count() === EGGS.length ? '全部找齊了！你是太平小偵探！' : '點已找到的彩蛋看故事；問號的提示寫在下面。'));
@@ -84,7 +121,7 @@ export function createEggs({ onFound }) {
       else b.disabled = true;
       grid.append(b);
     });
-    box.append(grid);
+    box.append(grid, keeper(note));
     body.replaceChildren(box);
     modal.hidden = false;
   }
@@ -93,6 +130,7 @@ export function createEggs({ onFound }) {
   function unlock(id, then) {
     const egg = EGGS.find((e) => e.id === id);
     if (!egg || !save.mark(`egg:${id}`)) return false;
+    navigator.storage?.persist?.().catch(() => {}); // 請瀏覽器盡量別清掉紀錄（不保證，所以還是要抄代碼）
     onFound?.(egg);
     if (!modal.hidden) queue.push(egg);
     else card(egg, true);

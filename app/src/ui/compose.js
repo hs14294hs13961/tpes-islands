@@ -58,8 +58,13 @@ export function createCompose({ min, max, placeholder, rows = 3, onChange }) {
     root,
     valid,
     value: () => ({ role, text: box.value.trim() }),
-    reset() {
+    /** 清空文字；all＝連身分一起清掉（換一件作品、可能換了一個人）。 */
+    reset(all = false) {
       box.value = '';
+      if (all) {
+        role = '';
+        chips.forEach((c) => c.setAttribute('aria-checked', 'false'));
+      }
       update();
     },
     focus: () => box.focus(),
